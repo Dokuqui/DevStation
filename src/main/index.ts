@@ -1,9 +1,22 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { scanProjects } from './scan'
 
 ipcMain.handle('ping', () => 'Pong from Main Process! 🏓')
+
+ipcMain.handle('dialog:openDirectory', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  })
+  if (canceled) return null
+  return filePaths[0]
+})
+
+ipcMain.handle('projects:scan', async (_, rootPath: string) => {
+  return await scanProjects(rootPath)
+})
 
 function createWindow(): void {
   // Create the browser window.

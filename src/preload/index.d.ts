@@ -5,6 +5,8 @@ declare global {
     electron: ElectronAPI
     api: {
       ping: () => Promise<string>
+      selectFolder: () => Promise<string | null>
+      scanProjects: (path: string) => Promise<Project[]>
     }
   }
 }

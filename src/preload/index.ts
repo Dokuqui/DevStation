@@ -1,8 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import { Project } from '../shared/types'
 
 const api = {
-  ping: () => ipcRenderer.invoke('ping')
-  // openFolder: () => ipcRender.invoke('dialog:openDirectory')
+  ping: () => ipcRenderer.invoke('ping'),
+  selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
+  scanProjects: (path: string): Promise<Project[]> => ipcRenderer.invoke('projects:scan', path)
 }
 
 if (process.contextIsolated) {

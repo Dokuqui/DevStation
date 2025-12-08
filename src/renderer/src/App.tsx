@@ -1,19 +1,22 @@
-// src/renderer/src/App.tsx
-import { JSX, useEffect, useState } from 'react'
+import { JSX, useState } from 'react'
 import styles from './App.module.scss'
-import { Terminal } from 'lucide-react'
+import { FolderSearch, Terminal } from 'lucide-react'
+import { Project } from '@renderer/types'
+import { ProjectCard } from './components/ProjectCard/ProjectCard'
 
 function App(): JSX.Element {
-  const [ipcResponse, setIpcResponse] = useState<string>('')
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    const checkConnection = async () => {
-      const response = await window.api.ping()
-      setIpcResponse(response)
-    }
-    checkConnection()
-  }, [])
+  const handleScan = async (): Promise<void> => {
+    const path = await window.api.selectFolder()
+    if (!path) return
+
+    setLoading(true)
+    const foundProjects = await window.api.scanProjects(path)
+    setProjects(foundProjects)
+    setLoading(false)
+  }
 
   return (
     <div className={styles.container}>
@@ -22,19 +25,32 @@ function App(): JSX.Element {
           <Terminal size={24} />
           <span>DevStation</span>
         </div>
-
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ color: 'var(--text-main)' }}>Dashboard</div>
-          <div style={{ color: 'var(--text-muted)' }}>Workflows</div>
-          <div style={{ color: 'var(--text-muted)' }}>Snippets</div>
-        </nav>
+        <button className={styles.btnPrimary} onClick={handleScan} disabled={loading}>
+          <FolderSearch size={16} />
+          {loading ? 'Scanning...' : 'Scan Projects'}
+        </button>
       </aside>
 
       <main className={styles.content}>
-        <h1>Welcome to DevStation</h1>
-        <p style={{ color: 'var(--text-muted)', marginTop: '10px' }}>
-          IPC Status: <span style={{ color: 'var(--accent-success)' }}>{ipcResponse}</span>
-        </p>
+        <h1 style={{ marginBottom: '20px' }}>Dashboard</h1>
+
+        {projects.length === 0 ? (
+          <div style={{ textAlign: 'center', marginTop: '50px', color: 'var(--text-muted)' }}>
+            <p>No projects found. Select a folder to start.</p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '20px'
+            }}
+          >
+            {projects.map((p) => (
+              <ProjectCard key={p.id} project={p} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
