@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { scanProjects } from './scan'
+import { setupTerminalHandlers } from './terminal'
 
 ipcMain.handle('ping', () => 'Pong from Main Process! 🏓')
 
@@ -31,6 +32,8 @@ function createWindow(): void {
       sandbox: false
     }
   })
+
+  setupTerminalHandlers(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

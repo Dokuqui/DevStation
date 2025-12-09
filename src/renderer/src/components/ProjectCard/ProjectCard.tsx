@@ -1,6 +1,6 @@
 import styles from './ProjectCard.module.scss'
 import { Project } from '@renderer/types'
-import { Box, Cog, FileCode } from 'lucide-react'
+import { Box, Cog, FileCode, Play } from 'lucide-react'
 import { JSX } from 'react'
 
 const TYPE_CONFIG = {
@@ -13,17 +13,17 @@ const TYPE_CONFIG = {
 
 interface Props {
   project: Project
+  onRunScript: (scriptName: string, project: Project) => void
 }
 
-export function ProjectCard({ project }: Props): JSX.Element {
+export function ProjectCard({ project, onRunScript }: Props): JSX.Element {
   const config = TYPE_CONFIG[project.type] || TYPE_CONFIG.unknown
-  const scriptKeys = Object.keys(project.scripts).slice(0, 3)
+  const scriptKeys = Object.keys(project.scripts).slice(0, 4)
 
   return (
-    <div className={styles.card} style={{ borderColor: project.isFavorite ? 'gold' : '' }}>
+    <div className={styles.card}>
       <div className={styles.header}>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {/* Dynamic Icon */}
           <span style={{ color: config.color }}>{config.icon}</span>
           <h3>{project.name}</h3>
         </div>
@@ -36,9 +36,17 @@ export function ProjectCard({ project }: Props): JSX.Element {
 
       <div className={styles.tags}>
         {scriptKeys.map((script) => (
-          <span key={script} style={{ borderColor: config.color }}>
-            {script}
-          </span>
+          <button
+            key={script}
+            className={styles.scriptBtn}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRunScript(script, project)
+            }}
+            style={{ borderColor: config.color, color: config.color }}
+          >
+            <Play size={10} /> {script}
+          </button>
         ))}
       </div>
     </div>

@@ -3,10 +3,15 @@ import styles from './App.module.scss'
 import { FolderSearch, Terminal } from 'lucide-react'
 import { Project } from '@renderer/types'
 import { ProjectCard } from './components/ProjectCard/ProjectCard'
+import { ScriptModal } from './components/ScriptModal/ScriptModal'
 
 function App(): JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(false)
+  const [activeSession, setActiveSession] = useState<{
+    script: string
+    project: Project
+  } | null>(null)
 
   const handleScan = async (): Promise<void> => {
     const path = await window.api.selectFolder()
@@ -16,6 +21,10 @@ function App(): JSX.Element {
     const foundProjects = await window.api.scanProjects(path)
     setProjects(foundProjects)
     setLoading(false)
+  }
+
+  const handleRunScript = (scriptName: string, project: Project): void => {
+    setActiveSession({ script: scriptName, project })
   }
 
   return (
@@ -47,11 +56,22 @@ function App(): JSX.Element {
             }}
           >
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} />
+              <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
             ))}
           </div>
         )}
       </main>
+
+      {activeSession && (
+        <ScriptModal
+          isOpen={!!activeSession}
+          onClose={() => setActiveSession(null)}
+          scriptName={activeSession.script}
+          projectPath={activeSession.project.path}
+          command={activeSession.project.scripts[activeSession.script]}
+          runner={activeSession.project.runnerCommand || 'npm run'}
+        />
+      )}
     </div>
   )
 }
