@@ -1,31 +1,31 @@
-import { spawn, ChildProcess } from 'child_process'
 import { ipcMain, BrowserWindow } from 'electron'
+import { spawn } from 'cross-spawn'
+import type { ChildProcess } from 'child_process'
 import treeKill from 'tree-kill'
 
 const terminals: Record<string, ChildProcess> = {}
 
 export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('terminal:create', (_, id: string, cwd: string, command: string) => {
-    // 1. Cleanup existing process if restarting
     if (terminals[id]) {
       killProcess(terminals[id])
       delete terminals[id]
     }
 
     try {
-      console.log(`[Terminal] Spawning: ${command}`)
+      const parts = command.split(' ')
+      const cmd = parts[0]
+      const args = parts.slice(1)
 
-      // 2. Spawn the process
-      // shell: true is critical for Windows
-      const child = spawn(command, [], {
-        cwd: cwd,
-        shell: true,
-        env: { ...process.env, FORCE_COLOR: '1' }
+      const child = spawn(cmd, args, {
+        cwd,
+        env: { ...process.env, FORCE_COLOR: '1' },
+        shell: false,
+        detached: process.platform === 'win32'
       })
 
       terminals[id] = child
 
-      // 3. Listen for Output
       child.stdout?.on('data', (data) => {
         if (!mainWindow.isDestroyed())
           mainWindow.webContents.send(`terminal:incoming:${id}`, data.toString())
@@ -36,7 +36,6 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
           mainWindow.webContents.send(`terminal:incoming:${id}`, data.toString())
       })
 
-      // 4. Handle Exit
       child.on('exit', () => {
         if (!mainWindow.isDestroyed()) mainWindow.webContents.send(`terminal:exit:${id}`)
         delete terminals[id]
@@ -64,16 +63,12 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
   ipcMain.on('terminal:resize', () => {})
 }
 
-// 💀 Robust Kill Function using 'tree-kill'
 function killProcess(child: ChildProcess): void {
   if (!child.pid) return
 
-  // This library handles the Windows/Mac/Linux differences perfectly
-  treeKill(child.pid, 'SIGKILL', (err) => {
+  treeKill(child.pid, (err) => {
     if (err) {
       console.error('Failed to kill process tree:', err)
-    } else {
-      console.log(`Successfully killed process ${child.pid}`)
     }
   })
 }

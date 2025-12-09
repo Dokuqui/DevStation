@@ -23,7 +23,6 @@ export function ScriptModal({
   const [isKilling, setIsKilling] = useState(false)
 
   useEffect(() => {
-    // Only run this logic if the modal is actually open
     if (!isOpen) return
 
     const fullCommand = `${runner} ${scriptName}`
@@ -31,7 +30,6 @@ export function ScriptModal({
 
     window.api.createTerminal(sessionID, projectPath, fullCommand)
 
-    // Cleanup: Try to kill if component unmounts
     return () => {
       window.api.killTerminal(sessionID)
     }
