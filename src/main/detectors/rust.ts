@@ -21,7 +21,7 @@ export const RustDetector: ProjectDetector = {
     const name = nameMatch ? nameMatch[1] : path.basename(folderPath)
 
     return {
-      type: 'rust',
+      type: 'rust' as const,
       name: name,
       version: '0.1.0',
       scripts: {
@@ -30,7 +30,8 @@ export const RustDetector: ProjectDetector = {
         test: 'test',
         check: 'check'
       },
-      runnerCommand: 'cargo'
+      runnerCommand: 'cargo',
+      installCommand: 'cargo build'
     } as Partial<Project>
   }
 }

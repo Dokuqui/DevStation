@@ -5,9 +5,10 @@ import { Project } from '../../shared/types'
 
 export const NodeDetector: ProjectDetector = {
   async isMatch(folderPath: string) {
+    const pkgPath = path.join(folderPath, 'package.json')
     try {
-      await fs.access(path.join(folderPath, 'package.json'))
-      return true
+      const stat = await fs.stat(pkgPath)
+      return stat.isFile()
     } catch {
       return false
     }
@@ -18,12 +19,32 @@ export const NodeDetector: ProjectDetector = {
     const data = await fs.readFile(pkgPath, 'utf-8')
     const json = JSON.parse(data)
 
+    let runner = 'npm run'
+    if (
+      await fs.access(path.join(folderPath, 'pnpm-lock.yaml')).then(
+        () => true,
+        () => false
+      )
+    ) {
+      runner = 'pnpm'
+    } else if (
+      await fs.access(path.join(folderPath, 'yarn.lock')).then(
+        () => true,
+        () => false
+      )
+    ) {
+      runner = 'yarn'
+    }
+
     return {
-      type: 'node',
+      type: 'node' as const,
       name: json.name || path.basename(folderPath),
       version: json.version || '0.0.0',
       scripts: json.scripts || {},
-      runnerCommand: 'npm run'
+      runnerCommand: runner,
+      installCommand: runner.replace(' run', '') + ' install',
+      dependencies: json.dependencies || {},
+      devDependencies: json.devDependencies || {}
     } as Partial<Project>
   }
 }

@@ -3,7 +3,7 @@ import path from 'path'
 import { ProjectDetector } from './base'
 import { Project } from '../../shared/types'
 
-const TARGET_FILES = ['go.mod']
+const TARGET_FILES = ['go.mod', 'main.go']
 
 export const GoDetector: ProjectDetector = {
   async isMatch(folderPath: string) {
@@ -15,11 +15,12 @@ export const GoDetector: ProjectDetector = {
         continue
       }
     }
-
-    const files = await fs.readdir(folderPath)
-    if (files.some((f) => f.endsWith('.go'))) return true
-
-    return false
+    try {
+      const files = await fs.readdir(folderPath)
+      return files.some((f) => f.endsWith('.go'))
+    } catch {
+      return false
+    }
   },
 
   async parse(folderPath: string) {
@@ -32,15 +33,19 @@ export const GoDetector: ProjectDetector = {
       const modPath = path.join(folderPath, 'go.mod')
       const modContent = await fs.readFile(modPath, 'utf-8')
       const match = modContent.match(/^module\s+([^\s]+)/m)
-      if (match) {
-        moduleName = match[1]
-      }
+      if (match) moduleName = match[1]
     } catch {
-      /* empty */
+      /* ignore */
+    }
+
+    try {
+      await fs.access(path.join(folderPath, 'main.go'))
+      scripts['run'] = 'run main.go'
+    } catch {
+      scripts['run'] = 'run .'
     }
 
     scripts['build'] = 'build .'
-    scripts['run'] = 'run .'
     scripts['test'] = 'test ./...'
 
     return {
@@ -48,7 +53,8 @@ export const GoDetector: ProjectDetector = {
       name: moduleName,
       version: '1.0.0',
       scripts,
-      runnerCommand: runner
+      runnerCommand: runner,
+      installCommand: 'go mod download'
     } as Partial<Project>
   }
 }

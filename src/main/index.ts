@@ -2,32 +2,36 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
 import { scanProjects } from './scan'
 import { setupTerminalHandlers } from './terminal'
 
-ipcMain.handle('ping', () => 'Pong from Main Process! 🏓')
+ipcMain.handle('ping', () => 'Pong from Main Process!')
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory']
   })
-  if (canceled) return null
+  if (canceled || filePaths.length === 0) return null
   return filePaths[0]
 })
 
-ipcMain.handle('projects:scan', async (_, rootPath: string) => {
+ipcMain.handle('projects:scan', async (_event, rootPath: string) => {
   return await scanProjects(rootPath)
 })
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1000,
+    height: 720,
     show: false,
     autoHideMenuBar: true,
+    titleBarStyle: 'hiddenInset',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
       sandbox: false
     }
   })
@@ -51,17 +55,15 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.dokuqui.devstation')
 
-  app.on('browser-window-created', (_, window) => {
+  app.on('browser-window-created', (_e, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.on('ping', () => console.log('pong'))
-
   createWindow()
 
-  app.on('activate', function () {
+  app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })

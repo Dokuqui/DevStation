@@ -24,7 +24,11 @@ function App(): JSX.Element {
   }
 
   const handleRunScript = (scriptName: string, project: Project): void => {
-    setActiveSession({ script: scriptName, project })
+    if (!scriptName && project.installCommand) {
+      setActiveSession({ script: 'install', project })
+    } else {
+      setActiveSession({ script: scriptName, project })
+    }
   }
 
   return (
@@ -51,8 +55,9 @@ function App(): JSX.Element {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '20px'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '1.5rem',
+              padding: '1rem 0'
             }}
           >
             {projects.map((p) => (
@@ -67,9 +72,7 @@ function App(): JSX.Element {
           isOpen={!!activeSession}
           onClose={() => setActiveSession(null)}
           scriptName={activeSession.script}
-          projectPath={activeSession.project.path}
-          command={activeSession.project.scripts[activeSession.script]}
-          runner={activeSession.project.runnerCommand || 'npm run'}
+          project={activeSession.project}
         />
       )}
     </div>
