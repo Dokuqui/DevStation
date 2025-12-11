@@ -5,8 +5,9 @@ import icon from '../../resources/icon.png?asset'
 
 import { scanProjects } from './scan'
 import { setupTerminalHandlers } from './terminal'
-
-ipcMain.handle('ping', () => 'Pong from Main Process!')
+import { exec } from 'child_process'
+import { detectIDEs, openInIDE } from './ide'
+import { IDE } from '../shared/types'
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -18,6 +19,44 @@ ipcMain.handle('dialog:openDirectory', async () => {
 
 ipcMain.handle('projects:scan', async (_event, rootPath: string) => {
   return await scanProjects(rootPath)
+})
+
+ipcMain.handle('project:open-vscode', async (_event, path: string) => {
+  exec(`code "${path}"`, (error) => {
+    if (error) console.error('Failed to open VSCode:', error)
+  })
+})
+
+ipcMain.handle('project:open-terminal', async (_event, path: string) => {
+  const platform = process.platform
+  let command = ''
+
+  if (platform === 'darwin') {
+    command = `open -a Terminal "${path}"`
+  } else if (platform === 'win32') {
+    command = `start cmd.exe /K "cd /d ${path}"`
+  } else if (platform === 'linux') {
+    command = `x-terminal-emulator --working-directory="${path}" || gnome-terminal --working-directory="${path}" || konsole --workdir "${path}"`
+  }
+
+  if (command) {
+    exec(command, (err) => {
+      if (err) console.error('Failed to open terminal', err)
+    })
+  }
+})
+
+ipcMain.handle('ide:detect', async () => {
+  const ides = await detectIDEs()
+  return ides.map((ide) => ide.id)
+})
+
+ipcMain.handle('ide:open', async (_event, { ideId, path }: { ideId: IDE; path: string }) => {
+  try {
+    await openInIDE(ideId, path)
+  } catch (err) {
+    console.error('Failed to open IDE:', err)
+  }
 })
 
 function createWindow(): void {

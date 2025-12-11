@@ -2,13 +2,15 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { spawn } from 'child_process'
 import treeKill from 'tree-kill'
-import os from 'os'
 
 interface TerminalSession {
   pid: number
+  process: any
 }
 
 const terminals: Record<string, TerminalSession> = {}
+
+const delay = (ms: number): Promise<unknown> => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('terminal', async (_event, action: string, payload: any) => {
@@ -17,48 +19,67 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
         const { id, cwd, command } = payload as { id: string; cwd: string; command: string }
 
         if (terminals[id]) {
+          console.log(`[Terminal] Restarting session ${id} (Killing PID ${terminals[id].pid})...`)
           killProcess(id)
+          await delay(500)
         }
 
         try {
-          console.log(`[Terminal] Launching External: ${command}`)
+          console.log(`[Terminal] Launching: ${command}`)
 
-          const isWin = os.platform() === 'win32'
-          let child
-
-          if (isWin) {
-            child = spawn('cmd.exe', ['/k', command], {
-              cwd,
-              detached: true,
-              shell: false,
-              stdio: 'ignore',
-              env: process.env
-            })
-          } else {
-            child = spawn(command, [], {
-              cwd,
-              shell: true,
-              detached: true,
-              stdio: 'ignore',
-              env: process.env
-            })
+          const env = {
+            ...process.env,
+            FORCE_COLOR: '1',
+            TERM: 'xterm-256color'
           }
 
-          child.unref()
+          const child = spawn(command, [], {
+            cwd,
+            shell: true,
+            detached: false,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env
+          })
 
-          const pid = child.pid
-          if (!pid) return { success: false, error: 'Failed to get PID' }
+          if (!child.pid) return { success: false, error: 'Failed to get PID' }
 
-          terminals[id] = { pid }
+          terminals[id] = { pid: child.pid, process: child }
 
-          if (!mainWindow.isDestroyed()) {
-            mainWindow.webContents.send(
-              `terminal:incoming:${id}`,
-              `\r\n\x1b[32m🚀 Launched in external terminal.\r\n(Check the new window. It will stay open on error.)\x1b[0m\r\n`
-            )
-          }
+          child.stdout?.on('data', (data) => {
+            if (!mainWindow.isDestroyed()) {
+              mainWindow.webContents.send(`terminal:incoming:${id}`, data.toString())
+            }
+          })
 
-          return { success: true, pid }
+          child.stderr?.on('data', (data) => {
+            if (!mainWindow.isDestroyed()) {
+              mainWindow.webContents.send(`terminal:incoming:${id}`, data.toString())
+            }
+          })
+
+          child.on('close', (code) => {
+            if (!mainWindow.isDestroyed()) {
+              mainWindow.webContents.send(
+                `terminal:incoming:${id}`,
+                `\r\n\x1b[33mProcess exited with code ${code}\x1b[0m\r\n`
+              )
+              mainWindow.webContents.send(`terminal:exit:${id}`, code)
+            }
+            if (terminals[id] && terminals[id].pid === child.pid) {
+              delete terminals[id]
+            }
+          })
+
+          child.on('error', (err) => {
+            if (!mainWindow.isDestroyed()) {
+              mainWindow.webContents.send(
+                `terminal:incoming:${id}`,
+                `\r\n\x1b[31mError: ${err.message}\x1b[0m\r\n`
+              )
+            }
+          })
+
+          return { success: true, pid: child.pid }
         } catch (e: any) {
           return { success: false, error: e.message }
         }
@@ -67,13 +88,9 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
       case 'kill': {
         const { id } = payload as { id: string }
         killProcess(id)
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send(`terminal:exit:${id}`, 0)
-        }
         return true
       }
 
-      case 'write':
       case 'resize':
         return true
 
@@ -88,6 +105,7 @@ function killProcess(id: string): void {
   if (!session) return
 
   const { pid } = session
+
   delete terminals[id]
 
   if (pid) {

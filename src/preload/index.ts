@@ -1,9 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { Project } from '../shared/types'
+import { IDE, Project } from '../shared/types'
 
 const api = {
-  ping: () => ipcRenderer.invoke('ping'),
-
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
 
   scanProjects: (path: string): Promise<Project[]> => ipcRenderer.invoke('projects:scan', path),
@@ -37,7 +35,15 @@ const api = {
     ipcRenderer.on(channel, listener)
 
     return () => ipcRenderer.removeListener(channel, listener)
-  }
+  },
+
+  getAvailableIDEs: (): Promise<IDE[]> => ipcRenderer.invoke('ide:detect'),
+
+  openProjectInIDE: (ideId: IDE, path: string): Promise<void> =>
+    ipcRenderer.invoke('ide:open', { ideId, path }),
+
+  openInVSCode: (path: string) => ipcRenderer.invoke('project:open-vscode', path),
+  openSystemTerminal: (path: string) => ipcRenderer.invoke('project:open-terminal', path)
 }
 
 if (process.contextIsolated) {

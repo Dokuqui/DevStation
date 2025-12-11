@@ -2,8 +2,8 @@ import fs from 'fs/promises'
 import type { Dirent } from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
-import simpleGit from 'simple-git'
-import { Project, ProjectType } from '../shared/types'
+import simpleGit, { DefaultLogFields, ListLogLine } from 'simple-git'
+import { Project, ProjectType, GitInfo } from '../shared/types'
 
 import { NodeDetector } from './detectors/node'
 import { PythonDetector } from './detectors/python'
@@ -12,29 +12,45 @@ import { GoDetector } from './detectors/go'
 
 const DETECTORS = [NodeDetector, PythonDetector, RustDetector, GoDetector] as const
 
-async function getGitInfo(projectPath: string): Promise<{
-  branch: string | null
-  status: 'modified' | 'clean'
-  ahead: number
-  behind: number
-  dirty: boolean
-} | null> {
+async function getGitInfo(projectPath: string): Promise<GitInfo | null> {
   try {
     const git = simpleGit(projectPath)
+
     const isRepo = await git.checkIsRepo()
     if (!isRepo) return null
 
-    const status = await git.status()
+    const status = await git.status().catch(() => null)
+    if (!status) return null
 
-    const hasChanges =
-      status.files.length > 0 || status.staged.length > 0 || status.not_added.length > 0
+    let lastCommitMessage: string | null = null
+    let lastCommitAuthor: string | null = null
+    let lastCommitDate: Date | null = null
+
+    try {
+      const logs = await git.log({ maxCount: 1 })
+      const latest = logs.latest as (DefaultLogFields & ListLogLine) | null
+
+      if (latest) {
+        lastCommitMessage = latest.message
+        lastCommitAuthor = latest.author_name
+        lastCommitDate = new Date(latest.date)
+      }
+    } catch {
+      // Repo might have no commits yet (clean init)
+    }
+
+    const filesChanged = status.files.length
+    const isClean = filesChanged === 0
 
     return {
-      branch: status.current || null,
-      status: hasChanges ? ('modified' as const) : ('clean' as const),
+      branch: status.current || 'HEAD',
+      isClean,
+      filesChanged,
       ahead: status.ahead || 0,
       behind: status.behind || 0,
-      dirty: hasChanges
+      lastCommitMessage,
+      lastCommitAuthor,
+      lastCommitDate
     }
   } catch {
     return null
@@ -54,6 +70,7 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
   const projects = new Map<string, Project>()
 
   async function scanDir(dirPath: string, depth = 0): Promise<void> {
+    // Avoid deep recursion and node_modules
     if (depth > 4) return
 
     let entries: Dirent[]
@@ -63,22 +80,26 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
       return
     }
 
+    // 1. Check if this folder is a project
     for (const detector of DETECTORS) {
       try {
         const match = await detector.isMatch(dirPath)
         if (!match) continue
 
+        // Parse details
         const details = await detector.parse(dirPath)
-        const type: ProjectType = details.type!
 
-        const gitInfo = await getGitInfo(dirPath)
-        const lastModified = await getLastModifiedTime(dirPath)
+        // Fetch Git and FS stats in parallel
+        const [gitInfo, lastModified] = await Promise.all([
+          getGitInfo(dirPath),
+          getLastModifiedTime(dirPath)
+        ])
 
         const project: Project = {
           id: randomUUID(),
           name: path.basename(dirPath),
           path: dirPath,
-          type,
+          type: details.type as ProjectType,
           version: details.version ?? null,
           scripts: details.scripts ?? {},
           runnerCommand: details.runnerCommand,
@@ -93,23 +114,23 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
         }
 
         projects.set(dirPath, project)
-        return
+        return // Stop recursing here if it's a project root
       } catch (err) {
-        console.warn(`[Scanner] Failed in ${dirPath}:`, (err as Error).message)
+        console.warn(`[Scanner] Skipped ${dirPath}:`, (err as Error).message)
       }
     }
 
-    for (const entry of entries) {
-      if (
+    // 2. Recurse into subdirectories
+    const subDirs = entries.filter(
+      (entry) =>
         entry.isDirectory() &&
         !entry.name.startsWith('.') &&
-        !['node_modules', 'dist', 'build', '.git', 'venv', '__pycache__', '.venv'].includes(
+        !['node_modules', 'dist', 'build', 'target', 'vendor', 'venv', '__pycache__'].includes(
           entry.name
         )
-      ) {
-        await scanDir(path.join(dirPath, entry.name), depth + 1)
-      }
-    }
+    )
+
+    await Promise.all(subDirs.map((entry) => scanDir(path.join(dirPath, entry.name), depth + 1)))
   }
 
   await scanDir(rootPath)

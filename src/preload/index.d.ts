@@ -1,17 +1,21 @@
 import '@electron-toolkit/preload'
 
-import type { Project } from '../shared/types'
+import type { IDE, Project } from '../shared/types'
 
 declare global {
   interface Window {
     electron: import('@electron-toolkit/preload').ElectronAPI
 
     api: {
-      ping: () => Promise<string>
-
       selectFolder: () => Promise<string | null>
 
       scanProjects: (path: string) => Promise<Project[]>
+
+      getAvailableIDEs: () => Promise<IDE[]>
+      openProjectInIDE: (ideId: IDE, path: string) => Promise<void>
+
+      openInVSCode: (path: string) => Promise<void>
+      openSystemTerminal: (path: string) => Promise<void>
 
       createTerminal: (
         id: string,
