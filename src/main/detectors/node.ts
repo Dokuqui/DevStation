@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { ProjectDetector } from './base'
-import { Project } from '../../shared/types'
+import { Project } from '@renderer/types'
 
 export const NodeDetector: ProjectDetector = {
   async isMatch(folderPath: string) {

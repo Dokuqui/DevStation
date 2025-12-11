@@ -1,6 +1,6 @@
 import '@electron-toolkit/preload'
 
-import type { IDE, Project, SystemStats } from '../shared/types'
+import { Project, IDE, SystemStats } from '@renderer/types'
 
 declare global {
   interface Window {
@@ -44,6 +44,20 @@ declare global {
       onScanLog: (callback: (msg: string) => void) => () => void
 
       onSystemUpdate: (callback: (stats: SystemStats) => void) => () => void
+
+      killProcess: (name: string) => Promise<string>
+
+      restartDocker: () => Promise<string>
+
+      startDocker: () => Promise<string>
+
+      stopDocker: () => Promise<string>
+
+      dockerPrune: () => Promise<string>
+
+      dockerComposeUp: () => Promise<string>
+
+      dockerComposeDown: () => Promise<string>
     }
   }
 }

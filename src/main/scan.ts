@@ -3,14 +3,15 @@ import type { Dirent } from 'fs'
 import path from 'path'
 import { createHash } from 'crypto'
 import simpleGit, { DefaultLogFields, ListLogLine } from 'simple-git'
-import { Project, ProjectType, GitInfo } from '../shared/types'
 
 import { NodeDetector } from './detectors/node'
 import { PythonDetector } from './detectors/python'
 import { RustDetector } from './detectors/rust'
 import { GoDetector } from './detectors/go'
+import { GitInfo, Project, ProjectType } from '@renderer/types'
+import { CSharpDetector } from './detectors/csharp'
 
-const DETECTORS = [NodeDetector, PythonDetector, RustDetector, GoDetector] as const
+const DETECTORS = [NodeDetector, PythonDetector, RustDetector, GoDetector, CSharpDetector] as const
 
 function generateIds(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -88,43 +89,71 @@ export async function scanProjects(
       return
     }
 
+    const detectedTypes: string[] = []
+    const mergedScripts: Record<string, string> = {}
+    let mergedDeps = 0
+    let mergedDevDeps = 0
+    const installCommands: string[] = []
+    let primaryType: ProjectType | null = null
+    let projectVersion: string | null = null
+
     for (const detector of DETECTORS) {
       try {
-        const match = await detector.isMatch(dirPath)
-        if (!match) continue
+        const isMatch = await detector.isMatch(dirPath)
+        if (!isMatch) continue
 
         const details = await detector.parse(dirPath)
 
-        if (onLog) onLog(`✨ Found ${details.type} project: ${path.basename(dirPath)}`)
-
-        const [gitInfo, lastModified] = await Promise.all([
-          getGitInfo(dirPath),
-          getLastModifiedTime(dirPath)
-        ])
-
-        const project: Project = {
-          id: generateIds(dirPath),
-          name: path.basename(dirPath),
-          path: dirPath,
-          type: details.type as ProjectType,
-          version: details.version ?? null,
-          scripts: details.scripts ?? {},
-          runnerCommand: details.runnerCommand,
-          installCommand: details.installCommand,
-          dependencies: details.dependencies ? Object.keys(details.dependencies).length : 0,
-          devDependencies: details.devDependencies
-            ? Object.keys(details.devDependencies).length
-            : 0,
-          lastModified,
-          git: gitInfo,
-          isFavorite: false
+        if (details.type) {
+          detectedTypes.push(details.type)
+          if (!primaryType) primaryType = details.type as ProjectType
         }
+        if (details.version && !projectVersion) projectVersion = details.version
 
-        projects.set(dirPath, project)
-        return
+        const runner = details.runnerCommand ? `${details.runnerCommand} ` : ''
+
+        Object.entries(details.scripts || {}).forEach(([key, val]) => {
+          if (details.type === 'node') {
+            mergedScripts[key] = `${runner}${key}`
+          } else {
+            mergedScripts[key] = `${runner}${val}`
+          }
+        })
+
+        mergedDeps += details.dependencies || 0
+        mergedDevDeps += details.devDependencies || 0
+        if (details.installCommand) installCommands.push(details.installCommand)
       } catch (err) {
-        console.warn(`[Scanner] Skipped ${dirPath}:`, (err as Error).message)
+        console.warn(`[Scanner] Error in detector:`, err)
       }
+    }
+
+    if (primaryType) {
+      if (onLog) onLog(`✨ Found project: ${path.basename(dirPath)} [${detectedTypes.join(', ')}]`)
+
+      const [gitInfo, lastModified] = await Promise.all([
+        getGitInfo(dirPath),
+        getLastModifiedTime(dirPath)
+      ])
+
+      const project: Project = {
+        id: generateIds(dirPath),
+        name: path.basename(dirPath),
+        path: dirPath,
+        type: primaryType,
+        version: projectVersion,
+        scripts: mergedScripts,
+        runnerCommand: undefined,
+        installCommand: installCommands.join(' && '),
+        dependencies: mergedDeps,
+        devDependencies: mergedDevDeps,
+        lastModified,
+        git: gitInfo,
+        isFavorite: false
+      }
+
+      projects.set(dirPath, project)
+      return
     }
 
     const subDirs = entries.filter(

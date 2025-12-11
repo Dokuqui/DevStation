@@ -2,10 +2,11 @@ import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
 import { Cpu, FolderSearch, LayoutGrid, Terminal } from 'lucide-react'
 import { Project } from '@renderer/types'
-import { ProjectCard } from './components/ProjectCard/ProjectCard'
-import { ScriptModal } from './components/ScriptModal/ScriptModal'
 import { useTimeStore } from './store/useTimeStore'
+import { ProjectCard } from './components/ProjectCard/ProjectCard'
+import { CommandPalette } from './components/CommandPalette/CommandPalette'
 import { ScanningModal } from './components/ScanningModal/ScanningModal'
+import { ScriptModal } from './components/ScriptModal/ScriptModal'
 import { SystemMonitor } from './components/SystemMonitor/SystemMonitor'
 
 type View = 'projects' | 'system'
@@ -20,6 +21,7 @@ function App(): JSX.Element {
 
   const [isScanning, setIsScanning] = useState(false)
   const [scanLogs, setScanLogs] = useState<string[]>([])
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
 
   const updateTimes = useTimeStore((state) => state.updateTimes)
 
@@ -34,6 +36,18 @@ function App(): JSX.Element {
       removeListener()
     }
   }, [updateTimes])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsPaletteOpen((prev) => !prev)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const handleScan = async (): Promise<void> => {
     const path = await window.api.selectFolder()
@@ -134,6 +148,15 @@ function App(): JSX.Element {
           </>
         )}
       </main>
+
+      {isPaletteOpen && (
+        <CommandPalette
+          projects={projects}
+          isOpen={true}
+          onClose={() => setIsPaletteOpen(false)}
+          onRunScript={handleRunScript}
+        />
+      )}
 
       {activeSession && (
         <ScriptModal

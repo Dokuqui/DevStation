@@ -1,4 +1,4 @@
-import { Project } from '../../shared/types'
+import { Project } from '@renderer/types'
 
 export interface ProjectDetector {
   isMatch(folderPath: string): Promise<boolean>

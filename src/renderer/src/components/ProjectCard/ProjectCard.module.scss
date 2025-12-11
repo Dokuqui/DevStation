@@ -30,6 +30,7 @@
   justify-content: space-between;
   align-items: flex-start;
 }
+
 .titleRow {
   display: flex;
   gap: 12px;
@@ -37,6 +38,7 @@
   align-items: center;
   flex: 1;
 }
+
 .iconWrapper {
   width: 42px;
   height: 42px;
@@ -45,12 +47,25 @@
   place-items: center;
   flex-shrink: 0;
 }
+
 .info {
   display: flex;
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
 }
+
+.versionBadge {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid;
+  color: var(--text-main);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
 .name {
   margin: 0;
   font-size: 1.05rem;
@@ -60,6 +75,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .path {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -69,11 +85,13 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
+
 .actions {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
+
 .actionBtn {
   background: transparent;
   border: 1px solid transparent;

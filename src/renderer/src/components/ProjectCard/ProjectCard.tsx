@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, JSX } from 'react'
 import styles from './ProjectCard.module.scss'
 import { IDE, Project } from '@renderer/types'
-import { useTimeStore } from '../../store/useTimeStore'
 import {
   Box,
   Terminal,
@@ -17,15 +16,19 @@ import {
   Download,
   ChevronDown,
   Timer,
-  Settings2
+  Settings2,
+  FileCode,
+  Cog
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useTimeStore } from '@renderer/store/useTimeStore'
 
 const TYPE_CONFIG = {
-  node: { color: '#89faa9', icon: Box, label: 'Node' },
-  python: { color: '#3776ab', icon: Box, label: 'Python' },
-  rust: { color: '#f76d47', icon: Box, label: 'Rust' },
+  node: { color: '#89faa9', icon: Box, label: 'Node.js' },
+  python: { color: '#3776ab', icon: FileCode, label: 'Python' },
+  rust: { color: '#f76d47', icon: Cog, label: 'Rust' },
   go: { color: '#00add8', icon: Box, label: 'Go' },
+  csharp: { color: '#512bd4', icon: Box, label: 'C#' },
   unknown: { color: '#a6adc8', icon: Box, label: 'App' }
 } as const
 
@@ -34,6 +37,7 @@ const PREFERRED_IDES: Record<string, IDE[]> = {
   rust: ['rustrover', 'vscode', 'sublime', 'custom'],
   go: ['goland', 'vscode', 'sublime', 'custom'],
   node: ['webstorm', 'vscode', 'sublime', 'custom'],
+  csharp: ['rider', 'vscode', 'sublime', 'custom'],
   unknown: ['vscode', 'sublime', 'custom']
 }
 
@@ -176,7 +180,12 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
             <Icon size={24} color={config.color} />
           </div>
           <div className={styles.info}>
-            <h3 className={styles.name}>{project.name}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 className={styles.name}>{project.name}</h3>
+              <span className={styles.versionBadge} style={{ borderColor: config.color }}>
+                {config.label} {project.version ? `v${project.version}` : ''}
+              </span>
+            </div>
             <span className={styles.path} title={project.path}>
               {project.path}
             </span>

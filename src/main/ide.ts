@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { IDE } from '../shared/types'
+import { IDE } from '@renderer/types'
 import os from 'os'
 import fs from 'fs/promises'
 import path from 'path'

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { IDE, Project, SystemStats } from '../shared/types'
+import { Project, IDE, SystemStats } from '@renderer/types'
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
@@ -69,7 +69,21 @@ const api = {
     const listener = (_event: IpcRendererEvent, stats: SystemStats): void => callback(stats)
     ipcRenderer.on('system:update', listener)
     return () => ipcRenderer.removeListener('system:update', listener)
-  }
+  },
+
+  killProcess: (name: string) => ipcRenderer.invoke('commands:kill-process', name),
+
+  restartDocker: () => ipcRenderer.invoke('docker:restart'),
+
+  startDocker: () => ipcRenderer.invoke('docker:start'),
+
+  stopDocker: () => ipcRenderer.invoke('docker:stop'),
+
+  dockerComposeUp: () => ipcRenderer.invoke('commands:docker-compose-up'),
+
+  dockerComposeDown: () => ipcRenderer.invoke('commands:docker-compose-down'),
+
+  dockerPrune: () => ipcRenderer.invoke('docker:prune')
 }
 
 if (process.contextIsolated) {

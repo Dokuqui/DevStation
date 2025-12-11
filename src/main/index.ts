@@ -16,6 +16,7 @@ import {
 } from './tracker'
 import { createHash } from 'crypto'
 import { startSystemMonitor } from './monitor'
+import { dockerComposeDown, dockerComposeUp, dockerPrune, killProcessByName, restartDocker, startDocker, stopDocker } from './commands'
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -95,6 +96,34 @@ ipcMain.handle('ide:select-custom', async () => {
 
 ipcMain.handle('time:get-all', () => {
   return getProjectTimes()
+})
+
+ipcMain.handle('commands:kill-process', async (_event, name: string) => {
+  return await killProcessByName(name)
+})
+
+ipcMain.handle('commands:restart-docker', async () => {
+  return await restartDocker()
+})
+
+ipcMain.handle('commands:docker-start', () => startDocker())
+
+ipcMain.handle('commands:docker-stop', () => stopDocker())
+
+ipcMain.handle('commands:docker-prune', () => dockerPrune())
+
+ipcMain.handle('commands:docker-compose-up', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const url = win?.webContents.getURL()
+  const cwd = url?.includes('file://') ? process.cwd() : process.cwd()
+  return await dockerComposeUp(cwd)
+})
+
+ipcMain.handle('commands:docker-compose-down', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const url = win?.webContents.getURL()
+  const cwd = url?.includes('file://') ? process.cwd() : process.cwd()
+  return await dockerComposeDown(cwd)
 })
 
 function createWindow(): void {

@@ -1,4 +1,4 @@
-export type ProjectType = 'node' | 'python' | 'rust' | 'go' | 'unknown'
+export type ProjectType = 'node' | 'python' | 'rust' | 'go' | 'csharp' | 'unknown'
 export type IDE =
   | 'vscode'
   | 'pycharm'
