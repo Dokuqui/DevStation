@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import type { Dirent } from 'fs'
 import path from 'path'
-import { randomUUID } from 'crypto'
+import { createHash } from 'crypto'
 import simpleGit, { DefaultLogFields, ListLogLine } from 'simple-git'
 import { Project, ProjectType, GitInfo } from '../shared/types'
 
@@ -11,6 +11,10 @@ import { RustDetector } from './detectors/rust'
 import { GoDetector } from './detectors/go'
 
 const DETECTORS = [NodeDetector, PythonDetector, RustDetector, GoDetector] as const
+
+function generateIds(projectPath: string): string {
+  return createHash('md5').update(projectPath).digest('hex')
+}
 
 async function getGitInfo(projectPath: string): Promise<GitInfo | null> {
   try {
@@ -66,12 +70,16 @@ async function getLastModifiedTime(folderPath: string): Promise<Date> {
   }
 }
 
-export async function scanProjects(rootPath: string): Promise<Project[]> {
+export async function scanProjects(
+  rootPath: string,
+  onLog?: (message: string) => void
+): Promise<Project[]> {
   const projects = new Map<string, Project>()
 
   async function scanDir(dirPath: string, depth = 0): Promise<void> {
-    // Avoid deep recursion and node_modules
     if (depth > 4) return
+
+    if (onLog) onLog(`Searching: ${dirPath}...`)
 
     let entries: Dirent[]
     try {
@@ -80,23 +88,22 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
       return
     }
 
-    // 1. Check if this folder is a project
     for (const detector of DETECTORS) {
       try {
         const match = await detector.isMatch(dirPath)
         if (!match) continue
 
-        // Parse details
         const details = await detector.parse(dirPath)
 
-        // Fetch Git and FS stats in parallel
+        if (onLog) onLog(`✨ Found ${details.type} project: ${path.basename(dirPath)}`)
+
         const [gitInfo, lastModified] = await Promise.all([
           getGitInfo(dirPath),
           getLastModifiedTime(dirPath)
         ])
 
         const project: Project = {
-          id: randomUUID(),
+          id: generateIds(dirPath),
           name: path.basename(dirPath),
           path: dirPath,
           type: details.type as ProjectType,
@@ -114,13 +121,12 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
         }
 
         projects.set(dirPath, project)
-        return // Stop recursing here if it's a project root
+        return
       } catch (err) {
         console.warn(`[Scanner] Skipped ${dirPath}:`, (err as Error).message)
       }
     }
 
-    // 2. Recurse into subdirectories
     const subDirs = entries.filter(
       (entry) =>
         entry.isDirectory() &&
@@ -133,7 +139,9 @@ export async function scanProjects(rootPath: string): Promise<Project[]> {
     await Promise.all(subDirs.map((entry) => scanDir(path.join(dirPath, entry.name), depth + 1)))
   }
 
+  if (onLog) onLog(`Starting scan in ${rootPath}`)
   await scanDir(rootPath)
+  if (onLog) onLog(`Scan complete. Found ${projects.size} projects.`)
 
   return Array.from(projects.values()).sort(
     (a, b) => b.lastModified.getTime() - a.lastModified.getTime()

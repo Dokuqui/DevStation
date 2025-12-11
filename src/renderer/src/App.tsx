@@ -1,26 +1,54 @@
-import { JSX, useState } from 'react'
+import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
 import { FolderSearch, Terminal } from 'lucide-react'
 import { Project } from '@renderer/types'
 import { ProjectCard } from './components/ProjectCard/ProjectCard'
 import { ScriptModal } from './components/ScriptModal/ScriptModal'
+import { useTimeStore } from './store/useTimeStore'
+import { ScanningModal } from './components/ScanningModal/ScanningModal'
 
 function App(): JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(false)
   const [activeSession, setActiveSession] = useState<{
     script: string
     project: Project
   } | null>(null)
 
+  const [isScanning, setIsScanning] = useState(false)
+  const [scanLogs, setScanLogs] = useState<string[]>([])
+
+  const updateTimes = useTimeStore((state) => state.updateTimes)
+
+  useEffect(() => {
+    window.api.getAvailableIDEs().catch(console.error)
+
+    const removeListener = window.api.onTimeUpdate((newTimes) => {
+      updateTimes(newTimes)
+    })
+
+    return () => {
+      removeListener()
+    }
+  }, [updateTimes])
+
   const handleScan = async (): Promise<void> => {
     const path = await window.api.selectFolder()
     if (!path) return
 
-    setLoading(true)
-    const foundProjects = await window.api.scanProjects(path)
-    setProjects(foundProjects)
-    setLoading(false)
+    setIsScanning(true)
+    setScanLogs([])
+
+    const removeLogListener = window.api.onScanLog((msg) => {
+      setScanLogs((prev) => [...prev.slice(-49), msg])
+    })
+
+    try {
+      const foundProjects = await window.api.scanProjects(path)
+      setProjects(foundProjects)
+    } finally {
+      removeLogListener()
+      setIsScanning(false)
+    }
   }
 
   const handleRunScript = (scriptName: string, project: Project): void => {
@@ -38,9 +66,9 @@ function App(): JSX.Element {
           <Terminal size={24} />
           <span>DevStation</span>
         </div>
-        <button className={styles.btnPrimary} onClick={handleScan} disabled={loading}>
+        <button className={styles.btnPrimary} onClick={handleScan} disabled={isScanning}>
           <FolderSearch size={16} />
-          {loading ? 'Scanning...' : 'Scan Projects'}
+          {isScanning ? 'Scanning...' : 'Scan Projects'}
         </button>
       </aside>
 
@@ -75,6 +103,8 @@ function App(): JSX.Element {
           project={activeSession.project}
         />
       )}
+
+      {isScanning && <ScanningModal logs={scanLogs} />}
     </div>
   )
 }

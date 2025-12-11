@@ -5,9 +5,20 @@ import icon from '../../resources/icon.png?asset'
 
 import { scanProjects } from './scan'
 import { setupTerminalHandlers } from './terminal'
-import { exec } from 'child_process'
-import { detectIDEs, openInIDE } from './ide'
+import { spawn } from 'child_process'
+import { detectIDEs, openInIDE, selectCustomIDE } from './ide'
 import { IDE } from '../shared/types'
+import {
+  getProjectTimes,
+  registerExternalProcess,
+  startTimeTracker,
+  updateKnownProjects
+} from './tracker'
+import { createHash } from 'crypto'
+
+function generateId(projectPath: string): string {
+  return createHash('md5').update(projectPath).digest('hex')
+}
 
 ipcMain.handle('dialog:openDirectory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -17,38 +28,56 @@ ipcMain.handle('dialog:openDirectory', async () => {
   return filePaths[0]
 })
 
-ipcMain.handle('projects:scan', async (_event, rootPath: string) => {
-  return await scanProjects(rootPath)
+ipcMain.handle('projects:scan', async (event, rootPath: string) => {
+  const window = BrowserWindow.fromWebContents(event.sender)
+
+  const onLog = (msg: string): void => {
+    if (window && !window.isDestroyed()) {
+      window.webContents.send('scan:log', msg)
+    }
+  }
+
+  const projects = await scanProjects(rootPath, onLog)
+
+  updateKnownProjects(projects.map((p) => ({ id: p.id, name: p.name })))
+
+  return projects
 })
 
 ipcMain.handle('project:open-vscode', async (_event, path: string) => {
-  exec(`code "${path}"`, (error) => {
-    if (error) console.error('Failed to open VSCode:', error)
-  })
+  await openInIDE('vscode', path).catch(console.error)
 })
 
 ipcMain.handle('project:open-terminal', async (_event, path: string) => {
   const platform = process.platform
-  let command = ''
+  let command
 
-  if (platform === 'darwin') {
-    command = `open -a Terminal "${path}"`
-  } else if (platform === 'win32') {
-    command = `start cmd.exe /K "cd /d ${path}"`
-  } else if (platform === 'linux') {
-    command = `x-terminal-emulator --working-directory="${path}" || gnome-terminal --working-directory="${path}" || konsole --workdir "${path}"`
-  }
+  try {
+    if (platform === 'darwin') {
+      command = spawn('open', ['-a', 'Terminal', path])
+    } else if (platform === 'win32') {
+      command = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', `cd /d "${path}"`], {
+        shell: true,
+        detached: true,
+        stdio: 'ignore'
+      })
+    } else if (platform === 'linux') {
+      const term = 'x-terminal-emulator'
+      command = spawn(term, ['--working-directory', path], { detached: true })
+    }
 
-  if (command) {
-    exec(command, (err) => {
-      if (err) console.error('Failed to open terminal', err)
-    })
+    if (command & command.pid) {
+      command.unref()
+      const projectId = generateId(path)
+      registerExternalProcess(command.pid, projectId)
+    }
+  } catch (err) {
+    console.error('Failed to open external terminal:', err)
   }
 })
 
 ipcMain.handle('ide:detect', async () => {
-  const ides = await detectIDEs()
-  return ides.map((ide) => ide.id)
+  return await detectIDEs()
 })
 
 ipcMain.handle('ide:open', async (_event, { ideId, path }: { ideId: IDE; path: string }) => {
@@ -57,6 +86,14 @@ ipcMain.handle('ide:open', async (_event, { ideId, path }: { ideId: IDE; path: s
   } catch (err) {
     console.error('Failed to open IDE:', err)
   }
+})
+
+ipcMain.handle('ide:select-custom', async () => {
+  return await selectCustomIDE()
+})
+
+ipcMain.handle('time:get-all', () => {
+  return getProjectTimes()
 })
 
 function createWindow(): void {
@@ -76,9 +113,11 @@ function createWindow(): void {
   })
 
   setupTerminalHandlers(mainWindow)
+  startTimeTracker(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    startTimeTracker(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

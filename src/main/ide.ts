@@ -1,11 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { IDE } from '../shared/types'
 import os from 'os'
 import fs from 'fs/promises'
 import path from 'path'
+import { dialog } from 'electron'
 
 const execAsync = promisify(exec)
+
+interface IDEStore {
+  customIDE: {
+    name: string
+    path: string
+  } | null
+}
+
+let store: any = null
+async function getStore(): Promise<any> {
+  if (store) return store
+  const { default: Store } = await import('electron-store')
+  store = new Store<IDEStore>({
+    defaults: { customIDE: null }
+  })
+  return store
+}
 
 interface IDEConfig {
   id: IDE
@@ -93,7 +112,7 @@ async function findBinary(ide: IDEConfig): Promise<string | null> {
   try {
     const cmd = isWin ? `where ${ide.bin}` : `which ${ide.bin}`
     const { stdout } = await execAsync(cmd)
-    return stdout.trim()
+    return stdout.split('\n')[0].trim()
   } catch {
     // empty
   }
@@ -109,7 +128,21 @@ async function findBinary(ide: IDEConfig): Promise<string | null> {
           if (platform === 'darwin') {
             binPath = path.join(basePath, entry.name, 'Contents/MacOS', ide.bin)
           } else if (isWin) {
-            binPath = path.join(basePath, entry.name, 'bin', `${ide.bin}${isWin ? '.exe' : ''}`)
+            const possiblePaths = [
+              path.join(basePath, entry.name, 'bin', `${ide.bin}.cmd`),
+              path.join(basePath, entry.name, 'bin', `${ide.bin}.exe`),
+              path.join(basePath, entry.name, `${ide.bin}.exe`)
+            ]
+
+            for (const p of possiblePaths) {
+              try {
+                await fs.access(p)
+                return p
+              } catch {
+                continue
+              }
+            }
+            continue
           } else {
             binPath = path.join(basePath, entry.name, ide.bin)
           }
@@ -129,9 +162,15 @@ async function findBinary(ide: IDEConfig): Promise<string | null> {
       const match = stdout.match(/InstallLocation\s+REG_SZ\s+(.+)/)
       if (match) {
         const installDir = match[1].trim()
-        const binPath = path.join(installDir, 'bin', `${ide.bin}.exe`)
-        await fs.access(binPath)
-        return binPath
+        const binPath = path.join(installDir, 'bin', `${ide.bin}.cmd`)
+        try {
+          await fs.access(binPath)
+          return binPath
+        } catch {
+          const exePath = path.join(installDir, 'bin', `${ide.bin}.exe`)
+          await fs.access(exePath)
+          return exePath
+        }
       }
     } catch {
       // empty
@@ -141,19 +180,51 @@ async function findBinary(ide: IDEConfig): Promise<string | null> {
   return null
 }
 
-export async function detectIDEs(): Promise<IDEConfig[]> {
-  const available: IDEConfig[] = []
+export async function selectCustomIDE(): Promise<{ name: string; path: string } | null> {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Select Editor Executable',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Executables', extensions: ['exe', 'app', 'cmd', 'bat', 'sh'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  })
+
+  if (canceled || filePaths.length === 0) return null
+
+  const selectedPath = filePaths[0]
+  const name = path.basename(selectedPath, path.extname(selectedPath))
+
+  const s = await getStore()
+  s.set('customIDE', { name, path: selectedPath })
+
+  return { name, path: selectedPath }
+}
+
+export async function detectIDEs(): Promise<any[]> {
+  const available: any[] = []
   for (const ide of IDES) {
     const binPath = await findBinary(ide)
     if (binPath) {
       available.push({ ...ide, bin: binPath })
     }
   }
+
+  const s = await getStore()
+  const custom = s.get('customIDE')
+  if (custom) {
+    available.push({
+      id: 'custom',
+      name: custom.name,
+      bin: custom.path
+    })
+  }
   return available
 }
 
 export async function openInIDE(ideId: IDE, projectPath: string): Promise<void> {
-  const ide = await detectIDEs().then((ides) => ides.find((i) => i.id === ideId))
+  const allIdes = await detectIDEs()
+  const ide = allIdes.find((i) => i.id === ideId)
   if (!ide) throw new Error(`IDE ${ideId} not found`)
 
   let command: string
@@ -165,7 +236,10 @@ export async function openInIDE(ideId: IDE, projectPath: string): Promise<void> 
     case 'sublime':
       command = `"${ide.bin}" "${projectPath}"`
       break
-    default: // JetBrains
+    case 'custom':
+      command = `"${ide.bin}" "${projectPath}"`
+      break
+    default:
       if (process.platform === 'darwin') {
         command = `open -a "${ide.name}" "${projectPath}"`
       } else {

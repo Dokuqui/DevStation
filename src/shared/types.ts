@@ -8,6 +8,7 @@ export type IDE =
   | 'rustrover'
   | 'sublime'
   | 'rider'
+  | 'custom'
 
 export interface GitInfo {
   branch: string | null

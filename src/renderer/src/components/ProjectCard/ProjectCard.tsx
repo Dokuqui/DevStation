@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, JSX } from 'react'
 import styles from './ProjectCard.module.scss'
 import { IDE, Project } from '@renderer/types'
+import { useTimeStore } from '../../store/useTimeStore'
 import {
   Box,
   Terminal,
@@ -14,7 +15,9 @@ import {
   Loader2,
   Clock,
   Download,
-  ChevronDown
+  ChevronDown,
+  Timer,
+  Settings2
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -27,22 +30,11 @@ const TYPE_CONFIG = {
 } as const
 
 const PREFERRED_IDES: Record<string, IDE[]> = {
-  python: ['pycharm', 'vscode', 'sublime'],
-  rust: ['rustrover', 'vscode', 'sublime'],
-  go: ['goland', 'vscode', 'sublime'],
-  node: ['webstorm', 'vscode', 'sublime'],
-  unknown: ['vscode', 'sublime']
-}
-
-const IDE_DISPLAY_NAME: Record<IDE, string> = {
-  vscode: 'VS Code',
-  pycharm: 'PyCharm',
-  rustrover: 'RustRover',
-  goland: 'GoLand',
-  webstorm: 'WebStorm',
-  sublime: 'Sublime Text',
-  intellij: 'IntelliJ',
-  rider: 'Rider'
+  python: ['pycharm', 'vscode', 'sublime', 'custom'],
+  rust: ['rustrover', 'vscode', 'sublime', 'custom'],
+  go: ['goland', 'vscode', 'sublime', 'custom'],
+  node: ['webstorm', 'vscode', 'sublime', 'custom'],
+  unknown: ['vscode', 'sublime', 'custom']
 }
 
 interface Props {
@@ -51,14 +43,24 @@ interface Props {
   onShowTerminal?: (terminalId: string) => void
 }
 
+function formatTime(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
+}
+
 export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JSX.Element {
   const config = TYPE_CONFIG[project.type] || TYPE_CONFIG.unknown
   const Icon = config.icon
   const scripts = Object.keys(project.scripts)
 
   const [runningScripts, setRunningScripts] = useState<Record<string, string>>({})
-  const [availableIDEs, setAvailableIDEs] = useState<IDE[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [availableIDEs, setAvailableIDEs] = useState<any[]>([])
   const [showIdeMenu, setShowIdeMenu] = useState(false)
+  const timeSpent = useTimeStore((state) => state.times[project.id] || 0)
 
   const listenersRef = useRef<Record<string, () => void>>({})
 
@@ -69,12 +71,16 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
     }
   }, [])
 
-  useEffect(() => {
+  const refreshIDEs = (): void => {
     window.api.getAvailableIDEs().then(setAvailableIDEs).catch(console.error)
+  }
+
+  useEffect(() => {
+    refreshIDEs()
   }, [])
 
   const preferred = PREFERRED_IDES[project.type] || PREFERRED_IDES.unknown
-  const validIDEs = availableIDEs.filter((ide) => preferred.includes(ide))
+  const validIDEs = availableIDEs.filter((ide) => preferred.includes(ide.id) || ide.id === 'custom')
 
   const handleRunScript = async (scriptName: string, isInstall = false): Promise<void> => {
     let command = ''
@@ -136,16 +142,21 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
   const handleIdeClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
-
     if (validIDEs.length === 0) {
       window.api.openInVSCode(project.path)
       return
     }
-
-    if (validIDEs.length === 1) {
-      window.api.openProjectInIDE(validIDEs[0], project.path)
-    } else {
+    if (validIDEs.length > 0) {
       setShowIdeMenu((prev) => !prev)
+    }
+  }
+
+  const handleAddCustomIDE = async (e: React.MouseEvent): Promise<void> => {
+    e.stopPropagation()
+    setShowIdeMenu(false)
+    const result = await window.api.selectCustomIDE()
+    if (result) {
+      refreshIDEs()
     }
   }
 
@@ -174,26 +185,37 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
         <div className={styles.actions}>
           <div className={styles.ideWrapper}>
-            <button onClick={handleIdeClick} className={styles.actionBtn}>
+            <button onClick={handleIdeClick} className={styles.actionBtn} title="Select Editor">
               <Code size={16} />
-              {validIDEs.length > 1 && <ChevronDown size={12} />}
+              <ChevronDown size={12} />
             </button>
 
-            {showIdeMenu && validIDEs.length > 1 && (
+            {showIdeMenu && (
               <div className={styles.ideMenu}>
                 {validIDEs.map((ide) => (
                   <div
-                    key={ide}
+                    key={ide.id}
                     className={styles.ideMenuItem}
                     onClick={(e) => {
                       e.stopPropagation()
-                      window.api.openProjectInIDE(ide, project.path)
+                      window.api.openProjectInIDE(ide.id, project.path)
                       setShowIdeMenu(false)
                     }}
                   >
-                    {IDE_DISPLAY_NAME[ide] || ide}
+                    {ide.name}
                   </div>
                 ))}
+
+                {validIDEs.length > 0 && <div className={styles.menuSeparator} />}
+
+                <div
+                  className={styles.ideMenuItem}
+                  onClick={handleAddCustomIDE}
+                  style={{ color: '#89b4fa' }}
+                >
+                  <Settings2 size={12} style={{ marginRight: 6 }} />
+                  Add Custom Editor...
+                </div>
               </div>
             )}
           </div>
@@ -286,9 +308,23 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.meta}>
-          <Clock size={12} />
-          {formatDistanceToNow(new Date(project.lastModified))} ago
+        <div className={styles.metaRow}>
+          <div className={styles.meta}>
+            <Clock size={12} />
+            {formatDistanceToNow(new Date(project.lastModified))} ago
+          </div>
+
+          <div
+            className={styles.meta}
+            title="Time spent running scripts"
+            style={{
+              color: timeSpent > 0 ? 'var(--accent-secondary)' : 'var(--text-muted)',
+              opacity: timeSpent > 0 ? 1 : 0.5
+            }}
+          >
+            <Timer size={12} />
+            {formatTime(timeSpent)}
+          </div>
         </div>
 
         <button

@@ -110,6 +110,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
+.menuSeparator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+}
+
 .ideMenuItem {
   padding: 6px 12px;
   font-size: 0.75rem;
@@ -117,10 +123,12 @@
   cursor: pointer;
   border-radius: 4px;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: var(--accent);
+    color: var(--text-main);
   }
 }
 
@@ -300,7 +308,13 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+}
+
+.metaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .meta {

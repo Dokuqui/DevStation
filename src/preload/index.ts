@@ -42,8 +42,28 @@ const api = {
   openProjectInIDE: (ideId: IDE, path: string): Promise<void> =>
     ipcRenderer.invoke('ide:open', { ideId, path }),
 
+  selectCustomIDE: (): Promise<{ name: string; path: string } | null> =>
+    ipcRenderer.invoke('ide:select-custom'),
+
   openInVSCode: (path: string) => ipcRenderer.invoke('project:open-vscode', path),
-  openSystemTerminal: (path: string) => ipcRenderer.invoke('project:open-terminal', path)
+
+  openSystemTerminal: (path: string) => ipcRenderer.invoke('project:open-terminal', path),
+
+  getProjectTimes: (): Promise<Record<string, number>> => ipcRenderer.invoke('time:get-all'),
+
+  onTimeUpdate: (callback: (times: Record<string, number>) => void) => {
+    const listener = (_event: IpcRendererEvent, times: Record<string, number>): void =>
+      callback(times)
+    ipcRenderer.on('time:update', listener)
+    return () => ipcRenderer.removeListener('time:update', listener)
+  },
+
+  onScanLog: (callback: (msg: string) => void) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listener = (_event: any, msg: string): void => callback(msg)
+    ipcRenderer.on('scan:log', listener)
+    return () => ipcRenderer.removeListener('scan:log', listener)
+  }
 }
 
 if (process.contextIsolated) {

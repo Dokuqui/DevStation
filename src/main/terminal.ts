@@ -6,11 +6,17 @@ import treeKill from 'tree-kill'
 interface TerminalSession {
   pid: number
   process: any
+  isRestarting?: boolean
 }
 
 const terminals: Record<string, TerminalSession> = {}
 
 const delay = (ms: number): Promise<unknown> => new Promise((resolve) => setTimeout(resolve, ms))
+
+export function getActiveTerminalIds(): string[] {
+  const keys = Object.keys(terminals)
+  return keys
+}
 
 export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('terminal', async (_event, action: string, payload: any) => {
@@ -20,6 +26,7 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
 
         if (terminals[id]) {
           console.log(`[Terminal] Restarting session ${id} (Killing PID ${terminals[id].pid})...`)
+          terminals[id].isRestarting = true
           killProcess(id)
           await delay(500)
         }
@@ -58,15 +65,18 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
           })
 
           child.on('close', (code) => {
-            if (!mainWindow.isDestroyed()) {
+            const session = terminals[id]
+            const isRestarting = session?.isRestarting
+
+            if (!isRestarting && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send(
                 `terminal:incoming:${id}`,
                 `\r\n\x1b[33mProcess exited with code ${code}\x1b[0m\r\n`
               )
               mainWindow.webContents.send(`terminal:exit:${id}`, code)
             }
-            if (terminals[id] && terminals[id].pid === child.pid) {
-              delete terminals[id]
+            if (session && session.pid === child.pid) {
+              if (!isRestarting) delete terminals[id]
             }
           })
 
@@ -106,11 +116,7 @@ function killProcess(id: string): void {
 
   const { pid } = session
 
-  delete terminals[id]
-
   if (pid) {
-    treeKill(pid, 'SIGKILL', (err) => {
-      if (err) console.error(`Failed to kill process ${pid}:`, err)
-    })
+    treeKill(pid, 'SIGKILL', () => {})
   }
 }

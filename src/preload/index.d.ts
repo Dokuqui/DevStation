@@ -12,9 +12,13 @@ declare global {
       scanProjects: (path: string) => Promise<Project[]>
 
       getAvailableIDEs: () => Promise<IDE[]>
+
       openProjectInIDE: (ideId: IDE, path: string) => Promise<void>
 
+      selectCustomIDE: () => Promise<{ name: string; path: string } | null>
+
       openInVSCode: (path: string) => Promise<void>
+
       openSystemTerminal: (path: string) => Promise<void>
 
       createTerminal: (
@@ -32,6 +36,12 @@ declare global {
       onTerminalData: (id: string, callback: (data: string) => void) => () => void
 
       onTerminalExit: (id: string, callback: (code: number | null) => void) => () => void
+
+      getProjectTimes: () => Promise<Record<string, number>>
+
+      onTimeUpdate: (callback: (times: Record<string, number>) => void) => () => void
+
+      onScanLog: (callback: (msg: string) => void) => () => void
     }
   }
 }
