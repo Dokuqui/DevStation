@@ -15,6 +15,7 @@ import {
   updateKnownProjects
 } from './tracker'
 import { createHash } from 'crypto'
+import { startSystemMonitor } from './monitor'
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -114,10 +115,12 @@ function createWindow(): void {
 
   setupTerminalHandlers(mainWindow)
   startTimeTracker(mainWindow)
+  startSystemMonitor(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
     startTimeTracker(mainWindow)
+    startSystemMonitor(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {

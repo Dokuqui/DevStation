@@ -42,3 +42,40 @@ export interface AvailableIDE {
   name: string
   path?: string
 }
+
+export interface DiskDetail {
+  fs: string
+  mount: string
+  type: string
+  size: number
+  used: number
+  use: number
+}
+
+export interface NetDetail {
+  iface: string
+  rx_sec: number
+  tx_sec: number
+}
+
+export interface SystemStats {
+  cpu: {
+    global: number
+    cores: number[]
+  }
+  mem: {
+    total: number
+    used: number
+    active: number
+    swapTotal: number
+    swapUsed: number
+  }
+  disk: {
+    main: DiskDetail
+    all: DiskDetail[]
+  }
+  net: {
+    total: { up: number; down: number }
+    interfaces: NetDetail[]
+  }
+}

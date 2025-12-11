@@ -92,7 +92,7 @@ export function startTimeTracker(mainWindow: BrowserWindow): void {
     const updates: Record<string, number> = {}
 
     activeProjectIds.forEach((projectId) => {
-      const newTime = (currentTimes[projectId] || 0) + 1
+      const newTime = (currentTimes[projectId] || 0) + 3
       currentTimes[projectId] = newTime
       updates[projectId] = newTime
     })
@@ -102,7 +102,7 @@ export function startTimeTracker(mainWindow: BrowserWindow): void {
     if (!mainWindow.isDestroyed()) {
       mainWindow.webContents.send('time:update', updates)
     }
-  }, 1000)
+  }, 3000)
 }
 
 export async function getProjectTimes(): Promise<Record<string, number>> {

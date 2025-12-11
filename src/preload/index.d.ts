@@ -1,6 +1,6 @@
 import '@electron-toolkit/preload'
 
-import type { IDE, Project } from '../shared/types'
+import type { IDE, Project, SystemStats } from '../shared/types'
 
 declare global {
   interface Window {
@@ -42,6 +42,8 @@ declare global {
       onTimeUpdate: (callback: (times: Record<string, number>) => void) => () => void
 
       onScanLog: (callback: (msg: string) => void) => () => void
+
+      onSystemUpdate: (callback: (stats: SystemStats) => void) => () => void
     }
   }
 }

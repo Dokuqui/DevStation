@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { IDE, Project } from '../shared/types'
+import { IDE, Project, SystemStats } from '../shared/types'
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
@@ -63,6 +63,12 @@ const api = {
     const listener = (_event: any, msg: string): void => callback(msg)
     ipcRenderer.on('scan:log', listener)
     return () => ipcRenderer.removeListener('scan:log', listener)
+  },
+
+  onSystemUpdate: (callback: (stats: SystemStats) => void) => {
+    const listener = (_event: IpcRendererEvent, stats: SystemStats): void => callback(stats)
+    ipcRenderer.on('system:update', listener)
+    return () => ipcRenderer.removeListener('system:update', listener)
   }
 }
 
