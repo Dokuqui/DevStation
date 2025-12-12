@@ -1,6 +1,6 @@
 import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
-import { Cpu, FolderSearch, LayoutGrid, Terminal } from 'lucide-react'
+import { Cpu, FolderSearch, LayoutGrid, Terminal, Workflow } from 'lucide-react'
 import { Project } from '@renderer/types'
 import { useTimeStore } from './store/useTimeStore'
 import { ProjectCard } from './components/ProjectCard/ProjectCard'
@@ -8,8 +8,9 @@ import { CommandPalette } from './components/CommandPalette/CommandPalette'
 import { ScanningModal } from './components/ScanningModal/ScanningModal'
 import { ScriptModal } from './components/ScriptModal/ScriptModal'
 import { SystemMonitor } from './components/SystemMonitor/SystemMonitor'
+import { WorkflowBuilder } from './components/WorkflowBuilder/WorkflowBuilder'
 
-type View = 'projects' | 'system'
+type View = 'projects' | 'system' | 'workflows'
 
 function App(): JSX.Element {
   const [currentView, setCurrentView] = useState<View>('projects')
@@ -102,6 +103,14 @@ function App(): JSX.Element {
             <Cpu size={18} />
             <span>System</span>
           </button>
+
+          <button
+            className={`${styles.navItem} ${currentView === 'workflows' ? styles.active : ''}`}
+            onClick={() => setCurrentView('workflows')}
+          >
+            <Workflow size={18} />
+            <span>Workflows</span>
+          </button>
         </div>
 
         <div className={styles.spacer} />
@@ -146,6 +155,24 @@ function App(): JSX.Element {
               <SystemMonitor />
             </div>
           </>
+        )}
+
+        {currentView === 'workflows' && (
+          <div style={{ height: '100%' }}>
+            <div className={styles.header}>
+              <h1>Automation Builder</h1>
+            </div>
+            <div
+              style={{
+                height: 'calc(100vh - 150px)',
+                border: '1px solid #333',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}
+            >
+              <WorkflowBuilder />
+            </div>
+          </div>
         )}
       </main>
 

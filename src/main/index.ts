@@ -16,7 +16,15 @@ import {
 } from './tracker'
 import { createHash } from 'crypto'
 import { startSystemMonitor } from './monitor'
-import { dockerComposeDown, dockerComposeUp, dockerPrune, killProcessByName, restartDocker, startDocker, stopDocker } from './commands'
+import {
+  dockerComposeDown,
+  dockerComposeUp,
+  dockerPrune,
+  killProcessByName,
+  restartDocker,
+  startDocker,
+  stopDocker
+} from './commands'
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -132,7 +140,14 @@ function createWindow(): void {
     height: 720,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: 'hidden',
+    frame: false,
+    backgroundColor: '#0d1117',
+    titleBarOverlay: {
+      color: '#161b22',
+      symbolColor: '#e6edf3',
+      height: 36
+    },
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -155,6 +170,11 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+
+  mainWindow.setTitleBarOverlay({
+    color: '#161b22',
+    symbolColor: '#e6edf3'
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
