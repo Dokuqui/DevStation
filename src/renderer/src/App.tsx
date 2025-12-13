@@ -1,6 +1,6 @@
 import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
-import { Cpu, FolderSearch, LayoutGrid, Terminal, Workflow } from 'lucide-react'
+import { ChevronLeft, Cpu, FolderSearch, LayoutGrid, Terminal, Workflow } from 'lucide-react'
 import { Project } from '@renderer/types'
 import { useTimeStore } from './store/useTimeStore'
 import { ProjectCard } from './components/ProjectCard/ProjectCard'
@@ -9,6 +9,8 @@ import { ScanningModal } from './components/ScanningModal/ScanningModal'
 import { ScriptModal } from './components/ScriptModal/ScriptModal'
 import { SystemMonitor } from './components/SystemMonitor/SystemMonitor'
 import { WorkflowBuilder } from './components/WorkflowBuilder/WorkflowBuilder'
+import { useWorkflowStore } from './store/useWorkflowStore'
+import { WorkflowList } from './components/WorkflowList/WorkflowList'
 
 type View = 'projects' | 'system' | 'workflows'
 
@@ -79,12 +81,13 @@ function App(): JSX.Element {
     }
   }
 
+  const { activeWorkflowId, closeEditor } = useWorkflowStore()
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
         <div className={styles.logo}>
           <Terminal size={24} />
-          <span>DevStation</span>
         </div>
 
         <div className={styles.nav}>
@@ -158,20 +161,50 @@ function App(): JSX.Element {
         )}
 
         {currentView === 'workflows' && (
-          <div style={{ height: '100%' }}>
-            <div className={styles.header}>
-              <h1>Automation Builder</h1>
-            </div>
-            <div
-              style={{
-                height: 'calc(100vh - 150px)',
-                border: '1px solid #333',
-                borderRadius: '12px',
-                overflow: 'hidden'
-              }}
-            >
-              <WorkflowBuilder />
-            </div>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* If NO active workflow, show LIST */}
+            {!activeWorkflowId ? (
+              <>
+                <div className={styles.header}>
+                  <h1>Automation</h1>
+                </div>
+                <WorkflowList />
+              </>
+            ) : (
+              /* If Active workflow, show BUILDER */
+              <>
+                <div className={styles.header}>
+                  <button
+                    onClick={closeEditor}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#ccc',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      marginRight: 12
+                    }}
+                  >
+                    <ChevronLeft size={20} /> Back
+                  </button>
+                  <h1>Edit Workflow</h1>
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <WorkflowBuilder />
+                </div>
+              </>
+            )}
           </div>
         )}
       </main>

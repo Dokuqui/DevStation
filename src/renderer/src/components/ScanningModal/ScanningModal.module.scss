@@ -1,10 +1,7 @@
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: grid;
@@ -13,98 +10,110 @@
 }
 
 .modal {
-  background: #1e1e2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
   width: 500px;
   max-width: 90vw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
 }
 
 .iconContainer {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   display: grid;
   place-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .mainIcon {
-  color: #89b4fa;
+  color: var(--accent-primary);
   z-index: 2;
+  filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.3));
 }
 
 .pulse {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: rgba(137, 180, 250, 0.2);
+  background: var(--accent-bg);
   border-radius: 50%;
-  animation: pulse 2s infinite;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .title {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   margin: 0 0 1.5rem 0;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 
 .logWindow {
   width: 100%;
-  height: 200px;
-  background: #11111b;
-  border-radius: 8px;
+  height: 220px;
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
   padding: 1rem;
   overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 6px;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 
-  /* Scrollbar */
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #333;
+    background: var(--bg-hover);
     border-radius: 3px;
   }
 }
 
 .logLine {
-  color: #a6adc8;
+  color: var(--text-secondary);
   word-break: break-all;
-  line-height: 1.4;
+  line-height: 1.5;
+  display: flex;
+  gap: 8px;
 
   &:last-child {
-    color: #fff;
-    font-weight: bold;
+    color: var(--text-main);
+    font-weight: 600;
+
+    .prompt {
+      color: var(--accent-primary);
+      text-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+    }
   }
 }
 
 .prompt {
-  color: #89b4fa;
-  margin-right: 6px;
+  color: var(--text-disabled);
   user-select: none;
+  font-weight: 700;
 }
 
 .footer {
   margin-top: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #6c7086;
-  font-size: 0.8rem;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .spinner {
+  color: var(--accent-primary);
   animation: spin 1s linear infinite;
 }
 
@@ -123,7 +132,7 @@
     opacity: 0.5;
   }
   100% {
-    transform: scale(1.5);
+    transform: scale(1.6);
     opacity: 0;
   }
 }
@@ -134,5 +143,16 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

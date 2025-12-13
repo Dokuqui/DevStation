@@ -146,13 +146,7 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
   const handleIdeClick = (e: React.MouseEvent): void => {
     e.stopPropagation()
-    if (validIDEs.length === 0) {
-      window.api.openInVSCode(project.path)
-      return
-    }
-    if (validIDEs.length > 0) {
-      setShowIdeMenu((prev) => !prev)
-    }
+    setShowIdeMenu((prev) => !prev)
   }
 
   const handleAddCustomIDE = async (e: React.MouseEvent): Promise<void> => {

@@ -18,34 +18,39 @@ export function TerminalView({ id }: Props): JSX.Element {
     const term = new Terminal({
       cursorBlink: true,
       convertEol: true,
-      cursorStyle: 'block',
+      cursorStyle: 'bar',
+      cursorWidth: 2,
       fontSize: 13,
       fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, "Courier New", monospace',
       letterSpacing: 0,
-      lineHeight: 1.2,
+      lineHeight: 1.4,
       scrollback: 5000,
       theme: {
-        background: '#1e1e2e',
-        foreground: '#cdd6f4',
-        black: '#45475a',
-        red: '#f38ba8',
-        green: '#a6e3a1',
-        yellow: '#f9e2af',
-        blue: '#89b4fa',
-        magenta: '#cba6f7',
-        cyan: '#94e2d5',
-        white: '#bac2de',
-        brightBlack: '#585b70',
-        brightRed: '#f38ba8',
-        brightGreen: '#a6e3a1',
-        brightYellow: '#f9e2af',
-        brightBlue: '#89b4fa',
-        brightMagenta: '#cba6f7',
-        brightCyan: '#94e2d5',
-        brightWhite: '#a6adc8',
-        selectionBackground: '#585b70',
-        cursor: '#f5e0dc',
-        cursorAccent: '#1e1e2e'
+        background: '#09090b',
+        foreground: '#f4f4f5',
+        cursor: '#7c3aed',
+        cursorAccent: '#ffffff',
+        selectionBackground: 'rgba(124, 58, 237, 0.3)',
+
+        // ANSI Colors (Desaturated/Professional)
+        black: '#27272a',
+        red: '#ef4444',
+        green: '#10b981',
+        yellow: '#f59e0b',
+        blue: '#3b82f6',
+        magenta: '#8b5cf6',
+        cyan: '#06b6d4',
+        white: '#e4e4e7',
+
+        // Bright Variants
+        brightBlack: '#52525b',
+        brightRed: '#f87171',
+        brightGreen: '#34d399',
+        brightYellow: '#fbbf24',
+        brightBlue: '#60a5fa',
+        brightMagenta: '#a78bfa',
+        brightCyan: '#22d3ee',
+        brightWhite: '#ffffff'
       }
     })
 
@@ -81,7 +86,9 @@ export function TerminalView({ id }: Props): JSX.Element {
     const fitAddon = fitAddonRef.current
     if (!container || !fitAddon) return
 
-    const observer = new ResizeObserver(() => fitAddon.fit())
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(() => fitAddon.fit())
+    })
     observer.observe(container)
 
     return () => observer.disconnect()
@@ -93,9 +100,10 @@ export function TerminalView({ id }: Props): JSX.Element {
       style={{
         width: '100%',
         height: '100%',
-        background: '#1e1e2e',
+        background: '#09090b',
         borderRadius: '8px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        border: '1px solid #27272a'
       }}
     />
   )

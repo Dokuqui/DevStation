@@ -1,14 +1,24 @@
 import { JSX, useCallback, useRef } from 'react'
-import { ReactFlow, Controls, Background, useReactFlow, ReactFlowProvider } from '@xyflow/react'
+import {
+  ReactFlow,
+  Controls,
+  Background,
+  useReactFlow,
+  ReactFlowProvider,
+  BackgroundVariant
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import styles from './WorkflowBuilder.module.scss'
 import { useWorkflowStore } from '../../store/useWorkflowStore'
 import { nodeTypes } from './nodeTypes'
-import { Plus, Save } from 'lucide-react'
+import { Plus, Save, CheckCircle } from 'lucide-react'
+import { PropertiesPanel } from './PropertiesPanel'
+import { useState } from 'react'
 
 function WorkflowCanvas(): JSX.Element {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const { screenToFlowPosition } = useReactFlow()
+  const [isSaved, setIsSaved] = useState(false)
 
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, saveWorkflow } =
     useWorkflowStore()
@@ -21,7 +31,6 @@ function WorkflowCanvas(): JSX.Element {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
-
       const type = event.dataTransfer.getData('application/reactflow')
       if (!type) return
 
@@ -45,6 +54,12 @@ function WorkflowCanvas(): JSX.Element {
     [screenToFlowPosition, addNode]
   )
 
+  const handleSave = async (): Promise<void> => {
+    await saveWorkflow()
+    setIsSaved(true)
+    setTimeout(() => setIsSaved(false), 2000)
+  }
+
   return (
     <div className={styles.builderContainer}>
       <div className={styles.toolbar}>
@@ -65,26 +80,42 @@ function WorkflowCanvas(): JSX.Element {
 
         <div className={styles.spacer} />
 
-        <button className={styles.btn} onClick={saveWorkflow}>
-          <Save size={14} /> Save
+        <button className={`${styles.btn} ${isSaved ? styles.success : ''}`} onClick={handleSave}>
+          {isSaved ? <CheckCircle size={14} /> : <Save size={14} />}
+          {isSaved ? 'Saved!' : 'Save'}
         </button>
       </div>
 
-      <div className={styles.canvasWrapper} ref={wrapperRef}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          nodeTypes={nodeTypes}
-          fitView
-        >
-          <Background color="#333" gap={16} />
-          <Controls />
-        </ReactFlow>
+      <div className={styles.wrapper}>
+        <div className={styles.canvasWrapper} ref={wrapperRef}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            colorMode="dark"
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1.5}
+              color="#334155"
+              style={{
+                background: 'radial-gradient(circle at 50% 50%, #0e1319 0%, #0a0e14 100%)'
+              }}
+            />
+
+            <Controls className={styles.controls} />
+          </ReactFlow>
+        </div>
+
+        <PropertiesPanel />
       </div>
     </div>
   )

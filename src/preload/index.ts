@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-import { Project, IDE, SystemStats } from '@renderer/types'
+import { Project, IDE, SystemStats, Workflow } from '@renderer/types'
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
@@ -83,7 +83,15 @@ const api = {
 
   dockerComposeDown: () => ipcRenderer.invoke('commands:docker-compose-down'),
 
-  dockerPrune: () => ipcRenderer.invoke('docker:prune')
+  dockerPrune: () => ipcRenderer.invoke('docker:prune'),
+
+  saveWorkflow: (workflow: Workflow) => ipcRenderer.invoke('workflow:save', workflow),
+
+  executeWorkflow: (workflow: Workflow) => ipcRenderer.invoke('workflow:execute', workflow),
+
+  deleteWorkflow: (id: string) => ipcRenderer.invoke('workflow:delete', id),
+
+  stopAllWorkflows: () => ipcRenderer.invoke('workflow:stop-all')
 }
 
 if (process.contextIsolated) {

@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
@@ -14,17 +14,18 @@
   width: min(90vw, 1000px);
   height: 80vh;
   background: var(--bg-card);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header {
   padding: 1rem 1.5rem;
-  background: var(--bg-secondary);
+  background: var(--bg-sidebar);
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -37,40 +38,47 @@
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     color: var(--text-main);
   }
 }
 
 .closeBtn {
-  background: #f87171;
-  color: white;
-  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--accent-danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
+  gap: 8px;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #ef4444;
+    background: var(--accent-danger);
+    border-color: var(--accent-danger);
+    color: white;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    background: var(--bg-hover);
+    border-color: transparent;
+    color: var(--text-disabled);
   }
 }
 
 .terminalContainer {
   flex: 1;
-  padding: 12px;
-  background: #1e1e2e;
+  padding: 1rem;
+  background: #09090b;
   display: flex;
   flex-direction: column;
 }

@@ -2,6 +2,7 @@
   display: flex;
   height: 100vh;
   width: 100vw;
+  background-color: var(--bg-app);
 }
 
 .sidebar {
@@ -21,8 +22,12 @@
   gap: 14px;
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--accent-secondary);
+  color: var(--text-main);
   letter-spacing: -0.5px;
+
+  span {
+    color: var(--accent-primary);
+  }
 }
 
 .nav {
@@ -36,7 +41,7 @@
   align-items: center;
   gap: 12px;
   padding: 11px 14px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   border: none;
@@ -51,9 +56,11 @@
   }
 
   &.active {
-    background: rgba(137, 180, 250, 0.12);
-    color: var(--accent-secondary);
+    background: var(--bg-active);
+    color: #e9d5ff;
     font-weight: 600;
+
+    box-shadow: inset 3px 0 0 0 var(--accent-primary);
   }
 }
 
@@ -62,8 +69,8 @@
 }
 
 .btnPrimary {
-  background: var(--accent-secondary);
-  color: #1e1e2e;
+  background: var(--accent-primary);
+  color: #ffffff;
   border: none;
   padding: 14px;
   border-radius: var(--radius);
@@ -75,14 +82,17 @@
   gap: 10px;
   transition: all 0.2s ease;
   font-size: 0.95rem;
+  box-shadow: var(--shadow-sm);
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: var(--accent-secondary);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
 
   &:disabled {
     opacity: 0.5;
+    background: var(--bg-hover);
     cursor: not-allowed;
   }
 }
@@ -91,7 +101,7 @@
   flex: 1;
   padding: 2.5rem;
   overflow-y: auto;
-  background: linear-gradient(to bottom, var(--bg-app), transparent);
+  background: linear-gradient(to bottom, var(--bg-app), var(--bg-sidebar));
 }
 
 .header {
@@ -106,14 +116,16 @@
     font-weight: 700;
     margin: 0;
     color: var(--text-main);
+    letter-spacing: -0.02em;
   }
 }
 
 .badge {
   background: var(--bg-hover);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   padding: 6px 12px;
   border-radius: 20px;
+  border: 1px solid var(--border);
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -134,17 +146,17 @@
     font-size: 1.4rem;
     color: var(--text-main);
     margin-bottom: 12px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .subtext {
     font-size: 1rem;
     color: var(--text-muted);
-    opacity: 0.8;
+    line-height: 1.6;
   }
 }
 
 .monitorWrapper {
   min-height: 60vh;
-  padding: 2rem;
+  padding-bottom: 2rem;
 }

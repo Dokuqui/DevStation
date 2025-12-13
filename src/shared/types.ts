@@ -79,3 +79,32 @@ export interface SystemStats {
     interfaces: NetDetail[]
   }
 }
+
+export interface WorkflowNodeData extends Record<string, unknown> {
+  label: string
+  type: string
+  command?: string
+  cron?: string
+  path?: string
+}
+
+export interface WorkflowNode {
+  id: string
+  type: string
+  data: WorkflowNodeData
+  position: { x: number; y: number }
+}
+
+export interface WorkflowEdge {
+  id: string
+  source: string
+  target: string
+}
+
+export interface Workflow {
+  id: string
+  name: string
+  nodes: WorkflowNode[]
+  edges: WorkflowEdge[]
+  active: boolean
+}

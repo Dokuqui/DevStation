@@ -75,7 +75,10 @@ const IDES: IDEConfig[] = [
     winRegKey: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\RustRover',
     paths: {
       darwin: ['/Applications', '~/Applications'],
-      win32: [`${process.env.PROGRAMFILES}\\JetBrains\\RustRover`],
+      win32: [
+        `${process.env.PROGRAMFILES}\\JetBrains\\RustRover`,
+        `${process.env.LOCALAPPDATA}\\JetBrains\\Toolbox\\apps\\RustRover`
+      ],
       linux: ['/opt/rustrover']
     }
   },
@@ -87,8 +90,26 @@ const IDES: IDEConfig[] = [
     winRegKey: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\GoLand',
     paths: {
       darwin: ['/Applications', '~/Applications'],
-      win32: [`${process.env.PROGRAMFILES}\\JetBrains\\GoLand`],
+      win32: [
+        `${process.env.PROGRAMFILES}\\JetBrains\\GoLand`,
+        `${process.env.LOCALAPPDATA}\\JetBrains\\Toolbox\\apps\\GoLand`
+      ],
       linux: ['/opt/goland']
+    }
+  },
+  {
+    id: 'rider',
+    name: 'Rider',
+    bin: 'rider64',
+    appName: 'Rider.app',
+    winRegKey: 'HKEY_LOCAL_MACHINE\\SOFTWARE\\JetBrains\\Rider',
+    paths: {
+      darwin: ['/Applications', '~/Applications'],
+      win32: [
+        `${process.env.ProgramFiles}\\JetBrains\\JetBrains Rider`,
+        `${process.env.LOCALAPPDATA}\\JetBrains\\Toolbox\\apps\\Rider`
+      ],
+      linux: ['/opt/rider']
     }
   },
   {

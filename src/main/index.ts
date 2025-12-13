@@ -7,7 +7,7 @@ import { scanProjects } from './scan'
 import { setupTerminalHandlers } from './terminal'
 import { spawn } from 'child_process'
 import { detectIDEs, openInIDE, selectCustomIDE } from './ide'
-import { IDE } from '../shared/types'
+import { IDE, Workflow } from '../shared/types'
 import {
   getProjectTimes,
   registerExternalProcess,
@@ -25,6 +25,8 @@ import {
   startDocker,
   stopDocker
 } from './commands'
+import { registerWorkflow, stopAllWorkflows, unregisterWorkflow } from './workflows/scheduler'
+import { runWorkflow } from './workflows/engine'
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -134,26 +136,55 @@ ipcMain.handle('commands:docker-compose-down', async (event) => {
   return await dockerComposeDown(cwd)
 })
 
+ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
+  registerWorkflow(workflow)
+  return { success: true }
+})
+
+ipcMain.handle('workflow:execute', (_event, workflow: Workflow) => {
+  runWorkflow(workflow)
+})
+
+ipcMain.handle('workflow:delete', (_event, workflowId: string) => {
+  unregisterWorkflow(workflowId)
+  return { success: true }
+})
+
+ipcMain.handle('workflow:stop-all', () => {
+  stopAllWorkflows()
+  return { success: true }
+})
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 720,
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     frame: false,
-    backgroundColor: '#0d1117',
+    backgroundColor: '#09090b',
+
     titleBarOverlay: {
-      color: '#161b22',
-      symbolColor: '#e6edf3',
-      height: 36
+      color: '#09090b',
+      symbolColor: '#a1a1aa',
+      height: 40
     },
+
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    trafficLightPosition: { x: 15, y: 15 },
+
     ...(process.platform === 'linux' ? { icon } : {}),
+
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      spellcheck: false
     }
   })
 
@@ -163,18 +194,13 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    startTimeTracker(mainWindow)
-    startSystemMonitor(mainWindow)
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
-  })
-
-  mainWindow.setTitleBarOverlay({
-    color: '#161b22',
-    symbolColor: '#e6edf3'
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

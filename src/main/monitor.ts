@@ -1,5 +1,8 @@
 import { BrowserWindow } from 'electron'
+import { EventEmitter } from 'events'
 import si from 'systeminformation'
+
+export const monitorEvents = new EventEmitter()
 
 let interval: NodeJS.Timeout | null = null
 
@@ -80,6 +83,8 @@ export function startSystemMonitor(mainWindow: BrowserWindow): void {
           interfaces: netInterfaces
         }
       }
+
+      monitorEvents.emit('stats', stats)
 
       mainWindow.webContents.send('system:update', stats)
     } catch (err) {

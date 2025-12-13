@@ -58,6 +58,14 @@ declare global {
       dockerComposeUp: () => Promise<string>
 
       dockerComposeDown: () => Promise<string>
+
+      saveWorkflow: (workflow: Workflow) => Promise<void>
+
+      executeWorkflow: (workflow: Workflow) => Promise<void>
+
+      deleteWorkflow: (id: string) => Promise<void>
+
+      stopAllWorkflows: () => Promise<void>
     }
   }
 }
