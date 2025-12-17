@@ -61,28 +61,33 @@ export const PythonDetector: ProjectDetector = {
     try {
       const tomlPath = path.join(folderPath, 'pyproject.toml')
       const tomlContent = await fs.readFile(tomlPath, 'utf-8')
+      const lines = tomlContent.split('\n')
 
-      if (tomlContent.includes('[tool.poetry]')) {
-        runner = 'poetry run python'
-        install = 'poetry install'
-      }
+      let currentSection = ''
 
-      if (tomlContent.includes('[tool.poe.tasks]')) {
-        const lines = tomlContent.split('\n')
-        let inPoe = false
-        for (const line of lines) {
-          const trimmed = line.trim()
-          if (trimmed.startsWith('[tool.poe.tasks]')) {
-            inPoe = true
-            continue
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) continue
+
+        if (trimmed.startsWith('[')) {
+          currentSection = trimmed.replace(/^\[+|\]+$/g, '').replace(/"/g, '').trim()
+
+          if (currentSection.startsWith('tool.poe.tasks.') && currentSection.length > 'tool.poe.tasks.'.length) {
+            const taskName = currentSection.replace('tool.poe.tasks.', '').trim()
+            scripts[taskName] = `-m poethepoet ${taskName}`
           }
-          if (inPoe && trimmed.startsWith('[')) {
-            inPoe = false
-            break
-          }
-          const match = trimmed.match(/^([\w-]+)\s*=/)
-          if (inPoe && match) {
-            scripts[match[1]] = `(poe task) ${match[1]}`
+
+          continue
+        }
+
+        if (currentSection === 'tool.poe.tasks') {
+          const match = trimmed.match(/^"?([\w-]+)"?\s*=/)
+
+          if (match) {
+            const taskName = match[1]
+            if (!scripts[taskName]) {
+              scripts[taskName] = `-m poethepoet ${taskName}`
+            }
           }
         }
       }
