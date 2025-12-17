@@ -73,17 +73,17 @@ const api = {
 
   killProcess: (name: string) => ipcRenderer.invoke('commands:kill-process', name),
 
-  restartDocker: () => ipcRenderer.invoke('docker:restart'),
+  restartDocker: () => ipcRenderer.invoke('commands:restart-docker'),
 
-  startDocker: () => ipcRenderer.invoke('docker:start'),
+  startDocker: () => ipcRenderer.invoke('commands:docker-start'),
 
-  stopDocker: () => ipcRenderer.invoke('docker:stop'),
+  stopDocker: () => ipcRenderer.invoke('commands:docker-stop'),
 
   dockerComposeUp: () => ipcRenderer.invoke('commands:docker-compose-up'),
 
   dockerComposeDown: () => ipcRenderer.invoke('commands:docker-compose-down'),
 
-  dockerPrune: () => ipcRenderer.invoke('docker:prune'),
+  dockerPrune: () => ipcRenderer.invoke('commands:docker-prune'),
 
   saveWorkflow: (workflow: Workflow) => ipcRenderer.invoke('workflow:save', workflow),
 
@@ -91,7 +91,9 @@ const api = {
 
   deleteWorkflow: (id: string) => ipcRenderer.invoke('workflow:delete', id),
 
-  stopAllWorkflows: () => ipcRenderer.invoke('workflow:stop-all')
+  stopAllWorkflows: () => ipcRenderer.invoke('workflow:stop-all'),
+
+  getAllWorkflows: (): Promise<any> => ipcRenderer.invoke('workflow:get-all'),
 }
 
 if (process.contextIsolated) {

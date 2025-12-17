@@ -66,6 +66,8 @@ declare global {
       deleteWorkflow: (id: string) => Promise<void>
 
       stopAllWorkflows: () => Promise<void>
+
+      getAllWorkflows: () => Promise<Workflow[]>
     }
   }
 }

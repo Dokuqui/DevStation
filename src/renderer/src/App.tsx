@@ -15,6 +15,7 @@ import { WorkflowList } from './components/WorkflowList/WorkflowList'
 type View = 'projects' | 'system' | 'workflows'
 
 function App(): JSX.Element {
+  const loadWorkflows = useWorkflowStore(state => state.loadWorkflows)
   const [currentView, setCurrentView] = useState<View>('projects')
   const [projects, setProjects] = useState<Project[]>([])
   const [activeSession, setActiveSession] = useState<{
@@ -52,6 +53,10 @@ function App(): JSX.Element {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  useEffect(() => {
+    loadWorkflows()
+  }, [])
+
   const handleScan = async (): Promise<void> => {
     const path = await window.api.selectFolder()
     if (!path) return
@@ -84,151 +89,152 @@ function App(): JSX.Element {
   const { activeWorkflowId, closeEditor } = useWorkflowStore()
 
   return (
-    <div className={styles.container}>
-      <aside className={styles.sidebar}>
-        <div className={styles.logo}>
-          <Terminal size={24} />
-        </div>
+    <>
+      <div className="titlebar" />
+      <div className={styles.container}>
+        <aside className={styles.sidebar}>
+          <div className={styles.logo}>
+            <Terminal size={24} />
+          </div>
 
-        <div className={styles.nav}>
-          <button
-            className={`${styles.navItem} ${currentView === 'projects' ? styles.active : ''}`}
-            onClick={() => setCurrentView('projects')}
-          >
-            <LayoutGrid size={18} />
-            <span>Projects</span>
+          <div className={styles.nav}>
+            <button
+              className={`${styles.navItem} ${currentView === 'projects' ? styles.active : ''}`}
+              onClick={() => setCurrentView('projects')}
+            >
+              <LayoutGrid size={18} />
+              <span>Projects</span>
+            </button>
+
+            <button
+              className={`${styles.navItem} ${currentView === 'system' ? styles.active : ''}`}
+              onClick={() => setCurrentView('system')}
+            >
+              <Cpu size={18} />
+              <span>System</span>
+            </button>
+
+            <button
+              className={`${styles.navItem} ${currentView === 'workflows' ? styles.active : ''}`}
+              onClick={() => setCurrentView('workflows')}
+            >
+              <Workflow size={18} />
+              <span>Workflows</span>
+            </button>
+          </div>
+
+          <div className={styles.spacer} />
+
+          <button className={styles.btnPrimary} onClick={handleScan} disabled={isScanning}>
+            <FolderSearch size={16} />
+            {isScanning ? 'Scanning...' : 'Scan Folder'}
           </button>
+        </aside>
 
-          <button
-            className={`${styles.navItem} ${currentView === 'system' ? styles.active : ''}`}
-            onClick={() => setCurrentView('system')}
-          >
-            <Cpu size={18} />
-            <span>System</span>
-          </button>
-
-          <button
-            className={`${styles.navItem} ${currentView === 'workflows' ? styles.active : ''}`}
-            onClick={() => setCurrentView('workflows')}
-          >
-            <Workflow size={18} />
-            <span>Workflows</span>
-          </button>
-        </div>
-
-        <div className={styles.spacer} />
-
-        <button className={styles.btnPrimary} onClick={handleScan} disabled={isScanning}>
-          <FolderSearch size={16} />
-          {isScanning ? 'Scanning...' : 'Scan Folder'}
-        </button>
-      </aside>
-
-      <main className={styles.content}>
-        {currentView === 'projects' && (
-          <>
-            <div className={styles.header}>
-              <h1>Projects</h1>
-              <span className={styles.badge}>{projects.length}</span>
-            </div>
-
-            {projects.length === 0 ? (
-              <div className={styles.emptyState}>
-                <p>No projects loaded.</p>
-                <span className={styles.subtext}>
-                  Click &quot;Scan Folder&quot; to get started.
-                </span>
+        <main className={styles.content}>
+          {currentView === 'projects' && (
+            <>
+              <div className={styles.header}>
+                <h1>Projects</h1>
+                <span className={styles.badge}>{projects.length}</span>
               </div>
-            ) : (
-              <div className={styles.grid}>
-                {projects.map((p) => (
-                  <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
-                ))}
-              </div>
-            )}
-          </>
-        )}
 
-        {currentView === 'system' && (
-          <>
-            <div className={styles.header}>
-              <h1>System Monitor</h1>
-            </div>
-            <div className={styles.monitorWrapper}>
-              <SystemMonitor />
-            </div>
-          </>
-        )}
-
-        {currentView === 'workflows' && (
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* If NO active workflow, show LIST */}
-            {!activeWorkflowId ? (
-              <>
-                <div className={styles.header}>
-                  <h1>Automation</h1>
+              {projects.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>No projects loaded.</p>
+                  <span className={styles.subtext}>
+                    Click &quot;Scan Folder&quot; to get started.
+                  </span>
                 </div>
-                <WorkflowList />
-              </>
-            ) : (
-              /* If Active workflow, show BUILDER */
-              <>
-                <div className={styles.header}>
-                  <button
-                    onClick={closeEditor}
+              ) : (
+                <div className={styles.grid}>
+                  {projects.map((p) => (
+                    <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {currentView === 'system' && (
+            <>
+              <div className={styles.header}>
+                <h1>System Monitor</h1>
+              </div>
+              <div className={styles.monitorWrapper}>
+                <SystemMonitor />
+              </div>
+            </>
+          )}
+
+          {currentView === 'workflows' && (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              {!activeWorkflowId ? (
+                <>
+                  <div className={styles.header}>
+                    <h1>Automation</h1>
+                  </div>
+                  <WorkflowList />
+                </>
+              ) : (
+                <>
+                  <div className={styles.header}>
+                    <button
+                      onClick={closeEditor}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#ccc',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        marginRight: 12
+                      }}
+                    >
+                      <ChevronLeft size={20} /> Back
+                    </button>
+                    <h1>Edit Workflow</h1>
+                  </div>
+                  <div
                     style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#ccc',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      marginRight: 12
+                      flex: 1,
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      overflow: 'hidden'
                     }}
                   >
-                    <ChevronLeft size={20} /> Back
-                  </button>
-                  <h1>Edit Workflow</h1>
-                </div>
-                <div
-                  style={{
-                    flex: 1,
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <WorkflowBuilder />
-                </div>
-              </>
-            )}
-          </div>
+                    <WorkflowBuilder />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </main>
+
+        {isPaletteOpen && (
+          <CommandPalette
+            projects={projects}
+            isOpen={true}
+            onClose={() => setIsPaletteOpen(false)}
+            onRunScript={handleRunScript}
+          />
         )}
-      </main>
 
-      {isPaletteOpen && (
-        <CommandPalette
-          projects={projects}
-          isOpen={true}
-          onClose={() => setIsPaletteOpen(false)}
-          onRunScript={handleRunScript}
-        />
-      )}
+        {activeSession && (
+          <ScriptModal
+            isOpen={!!activeSession}
+            onClose={() => setActiveSession(null)}
+            scriptName={activeSession.script}
+            project={activeSession.project}
+          />
+        )}
 
-      {activeSession && (
-        <ScriptModal
-          isOpen={!!activeSession}
-          onClose={() => setActiveSession(null)}
-          scriptName={activeSession.script}
-          project={activeSession.project}
-        />
-      )}
-
-      {isScanning && <ScanningModal logs={scanLogs} />}
-    </div>
+        {isScanning && <ScanningModal logs={scanLogs} />}
+      </div>
+    </>
   )
 }
 

@@ -41,6 +41,8 @@ interface WorkflowState {
   addNode: (node: Node) => void
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateNodeData: (nodeId: string, newData: Record<string, any>) => void
+  loadWorkflows: () => Promise<void>
+  updateWorkflowName: (name: string) => void
 }
 
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
@@ -153,5 +155,21 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         return node
       })
     })
-  }
+  },
+
+  loadWorkflows: async () => {
+    const saved = await window.api.getAllWorkflows()
+    set({ workflows: saved })
+  },
+
+  updateWorkflowName: (name: string) => {
+    const { activeWorkflowId, workflows } = get()
+    if (!activeWorkflowId) return
+
+    set({
+      workflows: workflows.map((w) =>
+        w.id === activeWorkflowId ? { ...w, name } : w
+      )
+    })
+  },
 }))

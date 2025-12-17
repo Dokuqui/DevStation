@@ -36,6 +36,28 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const runCommand = (
+    promise: Promise<unknown>,
+    successTitle: string = 'Success'
+  ): void => {
+    promise
+      .then((result) => {
+        new Notification(successTitle, {
+          body: typeof result === 'string' ? result : 'Command executed successfully',
+          silent: false
+        })
+      })
+      .catch((err) => {
+        const msg = err.message
+          ? err.message.replace('Error invoking remote method:', '').trim()
+          : 'Unknown error occurred'
+
+        new Notification('Command Failed', {
+          body: msg
+        })
+      })
+  }
+
   const items: PaletteItem[] = useMemo(() => {
     const list: PaletteItem[] = []
 
@@ -46,7 +68,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'node, node.exe, bun, deno',
         icon: Trash2,
         group: 'Processes',
-        action: () => window.api.killProcess('node')
+        action: () => runCommand(window.api.killProcess('node'), 'Node.js Killed')
       },
       {
         id: 'kill-python',
@@ -54,7 +76,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'python, python3, python.exe, py',
         icon: Trash2,
         group: 'Processes',
-        action: () => window.api.killProcess('python')
+        action: () => runCommand(window.api.killProcess('python'), 'Python Killed')
       },
       {
         id: 'kill-go',
@@ -62,7 +84,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'go, go.exe, built binaries',
         icon: Trash2,
         group: 'Processes',
-        action: () => window.api.killProcess('go')
+        action: () => runCommand(window.api.killProcess('go'), 'Go Killed')
       },
       {
         id: 'kill-rust',
@@ -70,7 +92,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'rustc, cargo, target/debug/*.exe',
         icon: Trash2,
         group: 'Processes',
-        action: () => window.api.killProcess('rust')
+        action: () => runCommand(window.api.killProcess('rust'), 'Rust Killed')
       },
       {
         id: 'kill-csharp',
@@ -78,7 +100,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'dotnet, csc, vbcscompiler, *.exe',
         icon: Trash2,
         group: 'Processes',
-        action: () => window.api.killProcess('dotnet')
+        action: () => runCommand(window.api.killProcess('dotnet'), '.NET Killed')
       },
       {
         id: 'docker-restart',
@@ -86,7 +108,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Restart Docker Desktop/Daemon',
         icon: RefreshCw,
         group: 'Docker',
-        action: () => window.api.restartDocker()
+        action: () => runCommand(window.api.restartDocker(), 'Docker Restarted')
       },
       {
         id: 'docker-start',
@@ -94,7 +116,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Launch Docker daemon',
         icon: Play,
         group: 'Docker',
-        action: () => window.api.startDocker()
+        action: () => runCommand(window.api.startDocker(), 'Docker Started')
       },
       {
         id: 'docker-stop',
@@ -102,7 +124,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Stop Docker daemon',
         icon: Square,
         group: 'Docker',
-        action: () => window.api.stopDocker()
+        action: () => runCommand(window.api.stopDocker(), 'Docker Stopped')
       },
       {
         id: 'docker-compose-up',
@@ -110,7 +132,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Run docker-compose up -d in current project',
         icon: ArrowUpCircle,
         group: 'Docker',
-        action: () => window.api.dockerComposeUp()
+        action: () => runCommand(window.api.dockerComposeUp(), 'Compose Up')
       },
       {
         id: 'docker-compose-down',
@@ -118,7 +140,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Run docker-compose down',
         icon: ArrowDownCircle,
         group: 'Docker',
-        action: () => window.api.dockerComposeDown()
+        action: () => runCommand(window.api.dockerComposeDown(), 'Compose Down')
       },
       {
         id: 'docker-prune',
@@ -126,7 +148,7 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         subtext: 'Remove unused containers, networks, images',
         icon: Trash2,
         group: 'Docker',
-        action: () => window.api.dockerPrune()
+        action: () => runCommand(window.api.dockerPrune(), 'System Pruned')
       }
     )
 
