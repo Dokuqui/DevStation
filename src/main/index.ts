@@ -1,4 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import Store from 'electron-store'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -25,8 +26,19 @@ import {
   startDocker,
   stopDocker
 } from './commands'
-import { registerWorkflow, stopAllWorkflows, unregisterWorkflow } from './workflows/scheduler'
+import { registerAllWorkflows, registerWorkflow, stopAllWorkflows, unregisterWorkflow } from './workflows/scheduler'
 import { runWorkflow } from './workflows/engine'
+
+interface StoreType {
+  workflows: Workflow[]
+}
+
+// @ts-ignore (TypeScript might complain, but this fixes the runtime crash)
+const store = new Store.default<StoreType>({
+  defaults: {
+    workflows: []
+  }
+})
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -137,8 +149,26 @@ ipcMain.handle('commands:docker-compose-down', async (event) => {
 })
 
 ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
+  const currentWorkflows = store.get('workflows')
+
+  const index = currentWorkflows.findIndex(w => w.id === workflow.id)
+  let newWorkflows
+  
+  if (index !== -1) {
+    newWorkflows = [...currentWorkflows]
+    newWorkflows[index] = workflow
+  } else {
+    newWorkflows = [...currentWorkflows, workflow]
+  }
+
+  store.set('workflows', newWorkflows)
+  
   registerWorkflow(workflow)
   return { success: true }
+})
+
+ipcMain.handle('workflow:get-all', () => {
+  return store.get('workflows')
 })
 
 ipcMain.handle('workflow:execute', (_event, workflow: Workflow) => {
@@ -147,6 +177,11 @@ ipcMain.handle('workflow:execute', (_event, workflow: Workflow) => {
 
 ipcMain.handle('workflow:delete', (_event, workflowId: string) => {
   unregisterWorkflow(workflowId)
+  
+  const current = store.get('workflows')
+  const filtered = current.filter(w => w.id !== workflowId)
+  store.set('workflows', filtered)
+  
   return { success: true }
 })
 
@@ -216,6 +251,12 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_e, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  const savedWorkflows = store.get('workflows')
+  if (savedWorkflows.length > 0) {
+    console.log(`[Startup] Restoring ${savedWorkflows.length} workflows...`)
+    registerAllWorkflows(savedWorkflows)
+  }
 
   createWindow()
 

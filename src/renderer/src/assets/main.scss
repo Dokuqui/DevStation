@@ -1,14 +1,17 @@
 :root {
   --bg-app: #09090b;
+  --bg-canvas: #000000;
   --bg-sidebar: #121215;
   --bg-card: #18181b;
+  --bg-node: #27272a;
+  --bg-node-header: #18181b;
 
   --bg-hover: #27272a;
-  --bg-active: #2e1065;
+  --bg-active: #3f3f46;
   --bg-input: #202023;
 
   --border: #27272a;
-  --border-focus: #7c3aed;
+  --border-focus: #71717a;
   --divider: #27272a;
 
   --text-main: #f4f4f5;
@@ -23,21 +26,21 @@
   --accent-warning: #f59e0b;
   --accent-danger: #ef4444;
 
-  --success-bg: rgba(16, 185, 129, 0.15);
-  --warning-bg: rgba(245, 158, 11, 0.15);
-  --danger-bg: rgba(239, 68, 68, 0.15);
-  --accent-bg: rgba(124, 58, 237, 0.15);
+  --success-bg: transparent;
+  --warning-bg: transparent;
+  --danger-bg: transparent;
+  --accent-bg: transparent;
 
-  --radius: 12px;
-  --radius-sm: 6px;
-  --radius-lg: 18px;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
 }
 
 * {
@@ -74,14 +77,17 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--bg-hover);
   border-radius: 10px;
   border: 2px solid var(--bg-app);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-disabled);
 }
@@ -94,7 +100,8 @@ body {
 }
 
 input,
-textarea {
+textarea,
+select {
   background-color: var(--bg-input);
   color: var(--text-main);
   border: 1px solid var(--border);
@@ -103,15 +110,33 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--border-focus);
+}
+
+.titlebar {
+  -webkit-app-region: drag;
+
+  width: 100%;
+  height: 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.titlebar button,
+.titlebar .clickable {
+  -webkit-app-region: no-drag;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -122,6 +147,7 @@ textarea:focus {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

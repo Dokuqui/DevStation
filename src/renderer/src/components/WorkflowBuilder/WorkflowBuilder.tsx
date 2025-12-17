@@ -11,7 +11,7 @@ import '@xyflow/react/dist/style.css'
 import styles from './WorkflowBuilder.module.scss'
 import { useWorkflowStore } from '../../store/useWorkflowStore'
 import { nodeTypes } from './nodeTypes'
-import { Plus, Save, CheckCircle } from 'lucide-react'
+import { Plus, Save, CheckCircle, Edit3 } from 'lucide-react'
 import { PropertiesPanel } from './PropertiesPanel'
 import { useState } from 'react'
 
@@ -20,8 +20,11 @@ function WorkflowCanvas(): JSX.Element {
   const { screenToFlowPosition } = useReactFlow()
   const [isSaved, setIsSaved] = useState(false)
 
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, saveWorkflow } =
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, saveWorkflow, workflows, activeWorkflowId, updateWorkflowName } =
     useWorkflowStore()
+
+  const activeWorkflow = workflows.find(w => w.id === activeWorkflowId)
+  const workflowName = activeWorkflow?.name || 'Untitled Workflow'
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault()
@@ -76,6 +79,18 @@ function WorkflowCanvas(): JSX.Element {
           onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'action')}
         >
           <Plus size={14} /> Action Node
+        </div>
+
+        <div className={styles.divider} />
+        <div className={styles.nameInputWrapper}>
+          <Edit3 size={14} className={styles.inputIcon} />
+          <input 
+            type="text" 
+            className={styles.nameInput}
+            value={workflowName}
+            onChange={(e) => updateWorkflowName(e.target.value)}
+            placeholder="Workflow Name"
+          />
         </div>
 
         <div className={styles.spacer} />
