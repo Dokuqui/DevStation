@@ -105,7 +105,9 @@ const api = {
     return () => ipcRenderer.removeListener('toast:show', listener)
   },
 
-  runWorkflow: (workflowId: string) => ipcRenderer.invoke('commands:run-workflow', workflowId)
+  runWorkflow: (workflowId: string) => ipcRenderer.invoke('commands:run-workflow', workflowId),
+
+  updateTheme: (theme: 'dark' | 'light') => ipcRenderer.invoke('window:update-theme', theme)
 }
 
 if (process.contextIsolated) {

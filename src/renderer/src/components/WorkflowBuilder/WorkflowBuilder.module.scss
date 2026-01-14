@@ -5,6 +5,7 @@
   width: 100%;
   background: var(--bg-canvas);
   overflow: hidden;
+  position: relative;
 }
 
 .wrapper {
@@ -20,7 +21,7 @@
   flex: 1;
   height: 100%;
   position: relative;
-  background-color: var(--bg-app);
+  background-color: var(--bg-canvas);
 }
 
 .react-flow__viewport {
@@ -29,7 +30,7 @@
 
 .toolbar {
   height: 60px;
-  background: var(--bg-sidebar);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -38,34 +39,35 @@
   flex-shrink: 0;
   z-index: 10;
   box-shadow: var(--shadow-sm);
+  color: var(--text-main);
 }
 
 .draggable {
   background: var(--bg-input);
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: grab;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 1px solid var(--border);
   color: var(--text-secondary);
   transition: all var(--transition-fast);
   user-select: none;
+  box-shadow: var(--shadow-sm);
 
   svg {
     color: var(--text-muted);
-    transition: color 0.2s;
   }
 
   &:hover {
     background: var(--bg-hover);
     border-color: var(--accent-primary);
     color: var(--text-main);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 
     svg {
       color: var(--accent-primary);
@@ -78,11 +80,55 @@
   }
 }
 
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border);
+  margin: 0 0.5rem;
+}
+
+.nameInputWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+
+  .inputIcon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+.nameInput {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 8px 12px 8px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 200px;
+  outline: none;
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
 .btn {
   background: var(--accent-primary);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 8px 18px;
+  border: none;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
@@ -96,16 +142,10 @@
   &:hover {
     background: var(--accent-secondary);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-
-  &:active {
-    transform: translateY(0);
   }
 
   &.success {
     background: var(--accent-success);
-    color: #000;
   }
 }
 
@@ -115,19 +155,20 @@
 
 .node {
   background: var(--bg-node);
-  border: 1px solid var(--bg-active);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  min-width: 220px;
+  min-width: 240px;
   box-shadow: var(--shadow-card);
   overflow: visible;
   font-family: 'Inter', sans-serif;
   transition: all var(--transition-fast);
   position: relative;
+  color: var(--text-main);
 
   &:hover {
     border-color: var(--text-secondary);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
 
   &.selected {
@@ -136,10 +177,8 @@
   }
 
   .nodeHeader {
-    border-top-left-radius: var(--radius);
-    border-top-right-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 0.95rem;
+    padding: 10px 14px;
+    font-size: 0.9rem;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -147,77 +186,83 @@
     border-bottom: 1px solid var(--border);
     color: var(--text-main);
     background: var(--bg-node-header);
-    letter-spacing: 0.02em;
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
   }
 
   .nodeBody {
-    padding: 16px;
-    font-size: 0.9rem;
+    padding: 14px;
+    font-size: 0.85rem;
     color: var(--text-main);
     background: var(--bg-node);
-    line-height: 1.5;
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+
+    small {
+      display: block;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
 
     code {
       display: block;
       background: var(--bg-app);
       padding: 6px 8px;
       border-radius: 4px;
-      margin-top: 4px;
-      font-family: monospace;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
-      color: var(--accent-secondary);
+      color: var(--text-main);
       border: 1px solid var(--border);
+      word-break: break-all;
     }
   }
 
   &.trigger {
     .nodeHeader {
-      border-left: 4px solid var(--accent-success);
+      border-left: 3px solid var(--accent-success);
     }
-
-    :global(.icon) {
+    svg {
       color: var(--accent-success);
     }
   }
 
   &.action {
     .nodeHeader {
-      border-left: 4px solid var(--accent-primary);
+      border-left: 3px solid var(--accent-primary);
     }
-
-    :global(.icon) {
+    svg {
       color: var(--accent-primary);
+    }
+  }
+
+  &.condition {
+    .nodeHeader {
+      border-left: 3px solid var(--accent-warning);
+    }
+    svg {
+      color: var(--accent-warning);
     }
   }
 }
 
 .handle {
-  width: 14px !important;
-  height: 14px !important;
-  background: var(--text-main);
-  border: 2px solid var(--bg-card);
+  width: 12px !important;
+  height: 12px !important;
+  background: var(--bg-card);
+  border: 2px solid var(--text-secondary);
   border-radius: 50%;
+  z-index: 100;
 
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%);
   transform-origin: center center;
 
-  transition:
-    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    background-color 0.2s ease,
-    border-color 0.2s ease;
-
-  z-index: 100;
-  cursor: crosshair;
-
-  outline: 4px solid transparent;
+  transition: all 0.2s;
 
   &:hover {
     background: var(--accent-primary);
-    border-color: var(--text-main);
-
-    transform: translate(-50%, -50%) scale(1.6);
-
-    z-index: 101;
+    border-color: var(--accent-primary);
+    transform: translate(-50%, -50%) scale(1.3);
   }
 }
 
@@ -227,24 +272,20 @@
   border-radius: 50%;
   border: 3px solid var(--bg-card);
 
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(-50%, -50%);
   transform-origin: center center;
-
-  transition:
-    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    background-color 0.2s ease;
 
   z-index: 100;
   cursor: pointer;
+  transition: all 0.2s;
 
   &:hover {
-    transform: translate(-50%, -50%) scale(1.8);
+    transform: translate(-50%, -50%) scale(1.3);
   }
 }
 
 .propertiesPanel {
-  width: 340px;
-  height: 100%;
+  width: 320px;
   background: var(--bg-sidebar);
   border-left: 1px solid var(--border);
   padding: 1.5rem;
@@ -252,18 +293,7 @@
   flex-direction: column;
   gap: 1.5rem;
   overflow-y: auto;
-  flex-shrink: 0;
   box-shadow: var(--shadow-card);
-  z-index: 20;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--bg-hover);
-    border-radius: 3px;
-  }
 }
 
 .panelHeader {
@@ -272,7 +302,6 @@
   align-items: center;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 0.5rem;
 
   h3 {
     margin: 0;
@@ -285,32 +314,14 @@
     background: transparent;
     border: none;
     color: var(--text-muted);
-    cursor: pointer;
     padding: 6px;
     border-radius: 4px;
-    transition: all var(--transition-fast);
-
+    cursor: pointer;
     &:hover {
       background: var(--bg-hover);
-      color: var(--accent-danger);
+      color: var(--text-main);
     }
   }
-}
-
-.emptyState {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  text-align: center;
-  margin-top: 50%;
-  transform: translateY(-50%);
-  font-style: italic;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  opacity: 0.8;
-  padding: 0 2rem;
-  line-height: 1.6;
 }
 
 .formGroup {
@@ -332,33 +343,42 @@
     background: var(--bg-input);
     border: 1px solid var(--border);
     color: var(--text-main);
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     outline: none;
-    transition: all var(--transition-fast);
+    transition: all 0.2s;
+    width: 100%;
 
     &:hover {
-      border-color: var(--text-disabled);
+      border-color: var(--text-secondary);
     }
 
     &:focus {
-      border-color: var(--border-focus);
+      border-color: var(--accent-primary);
       background: var(--bg-app);
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
     }
 
     &::placeholder {
-      color: var(--text-disabled);
+      color: var(--text-muted);
     }
   }
 
   textarea {
-    min-height: 120px;
+    min-height: 80px;
     resize: vertical;
-    line-height: 1.5;
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
   }
+}
+
+.emptyState {
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 50%;
+  font-style: italic;
 }
 
 .controls {
@@ -373,9 +393,20 @@
     border: none;
     border-bottom: 1px solid var(--border);
     border-radius: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     color: var(--text-main);
-    width: 32px;
-    height: 32px;
+    fill: var(--text-main);
+
+    svg {
+      fill: currentColor;
+      max-width: 18px;
+      max-height: 18px;
+    }
 
     &:last-child {
       border-bottom: none;
@@ -384,53 +415,7 @@
     &:hover {
       background-color: var(--bg-hover);
       color: var(--accent-primary);
+      fill: var(--accent-primary);
     }
-  }
-}
-
-.divider {
-  width: 1px;
-  height: 24px;
-  background-color: var(--border);
-  margin: 0 1rem;
-}
-
-.nameInputWrapper {
-  display: flex;
-  align-items: center;
-  position: relative;
-
-  .inputIcon {
-    position: absolute;
-    left: 10px;
-    color: var(--text-muted);
-    pointer-events: none;
-  }
-}
-
-.nameInput {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 8px 12px 8px 32px;
-  border-radius: var(--radius-sm);
-  font-size: 0.95rem;
-  font-weight: 600;
-  min-width: 250px;
-  outline: none;
-  transition: all var(--transition-fast);
-
-  &:hover {
-    border-color: var(--text-disabled);
-  }
-
-  &:focus {
-    border-color: var(--accent-primary);
-    background: var(--bg-app);
-  }
-
-  &::placeholder {
-    font-weight: 400;
-    opacity: 0.5;
   }
 }

@@ -75,6 +75,8 @@ declare global {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       runWorkflow: (workflow: any) => Promise<string>
+
+      updateTheme: (theme: 'dark' | 'light') => Promise<void>
     }
   }
 }

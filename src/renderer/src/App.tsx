@@ -1,6 +1,15 @@
 import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
-import { ChevronLeft, Cpu, FolderSearch, LayoutGrid, Terminal, Workflow } from 'lucide-react'
+import {
+  ChevronLeft,
+  Cpu,
+  FolderSearch,
+  LayoutGrid,
+  Moon,
+  Sun,
+  Terminal,
+  Workflow
+} from 'lucide-react'
 import { Project } from '@renderer/types'
 import { useTimeStore } from './store/useTimeStore'
 import { ProjectCard } from './components/ProjectCard/ProjectCard'
@@ -14,7 +23,7 @@ import { WorkflowList } from './components/WorkflowList/WorkflowList'
 import { ToastContainer } from './components/Toast/ToastContainer'
 import { useToastStore } from './store/useToastStore'
 
-type View = 'projects' | 'system' | 'workflows'
+type View = 'projects' | 'system' | 'workflows' | 'settings'
 
 function App(): JSX.Element {
   const loadWorkflows = useWorkflowStore((state) => state.loadWorkflows)
@@ -28,9 +37,37 @@ function App(): JSX.Element {
   const [isScanning, setIsScanning] = useState(false)
   const [scanLogs, setScanLogs] = useState<string[]>([])
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
 
   const updateTimes = useTimeStore((state) => state.updateTimes)
   const addToast = useToastStore((state) => state.addToast)
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | null
+    if (savedTheme) {
+      setTheme(savedTheme)
+      document.body.classList.toggle('light-mode', savedTheme === 'light')
+    }
+  }, [])
+
+  const toggleTheme = (): void => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+    document.body.classList.toggle('light-mode', newTheme === 'light')
+
+    window.api.updateTheme(newTheme)
+  }
+
+  useEffect(() => {
+    const removeListener = window.api.onShowToast((msg, type) => {
+      addToast(msg, type)
+    })
+
+    return () => {
+      removeListener()
+    }
+  }, [])
 
   useEffect(() => {
     const removeListener = window.api.onShowToast((msg, type) => {
@@ -107,8 +144,18 @@ function App(): JSX.Element {
       <ToastContainer />
       <div className={styles.container}>
         <aside className={styles.sidebar}>
-          <div className={styles.logo}>
-            <Terminal size={24} />
+          <div className={styles.sidebarDrag} />
+          <div className={styles.sidebarHeader}>
+            <div className={styles.logo}>
+              <Terminal size={24} />
+            </div>
+            <button
+              className={styles.themeToggle}
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
 
           <div className={styles.nav}>
@@ -146,6 +193,7 @@ function App(): JSX.Element {
         </aside>
 
         <main className={styles.content}>
+          <div className={styles.contentDrag} />
           {currentView === 'projects' && (
             <>
               <div className={styles.header}>

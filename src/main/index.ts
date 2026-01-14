@@ -49,6 +49,27 @@ function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
 }
 
+ipcMain.handle('window:update-theme', (_event, theme: 'dark' | 'light') => {
+  const win = BrowserWindow.getAllWindows()[0]
+  if (win) {
+    if (theme === 'light') {
+      win.setBackgroundColor('#ffffff')
+      win.setTitleBarOverlay({
+        color: '#ffffff',
+        symbolColor: '#0f172a',
+        height: 32
+      })
+    } else {
+      win.setBackgroundColor('#09090b')
+      win.setTitleBarOverlay({
+        color: '#09090b',
+        symbolColor: '#a1a1aa',
+        height: 32
+      })
+    }
+  }
+})
+
 ipcMain.handle('dialog:openDirectory', async () => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ['openDirectory']
@@ -208,19 +229,20 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
+
     titleBarStyle: 'hidden',
-    frame: false,
+
     backgroundColor: '#09090b',
 
     titleBarOverlay: {
       color: '#09090b',
       symbolColor: '#a1a1aa',
-      height: 40
+      height: 32
     },
 
     vibrancy: 'under-window',
     visualEffectState: 'active',
-    trafficLightPosition: { x: 15, y: 15 },
+    trafficLightPosition: { x: 15, y: 10 },
 
     ...(process.platform === 'linux' ? { icon } : {}),
 

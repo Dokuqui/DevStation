@@ -1,4 +1,4 @@
-import { JSX, useCallback, useRef } from 'react'
+import { JSX, useCallback, useRef, useEffect, useState } from 'react'
 import {
   ReactFlow,
   Controls,
@@ -14,12 +14,26 @@ import { useWorkflowStore } from '../../store/useWorkflowStore'
 import { nodeTypes } from './nodeTypes'
 import { Plus, Save, CheckCircle, Edit3, Split } from 'lucide-react'
 import { PropertiesPanel } from './PropertiesPanel'
-import { useState } from 'react'
 
 function WorkflowCanvas(): JSX.Element {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const { screenToFlowPosition } = useReactFlow()
   const [isSaved, setIsSaved] = useState(false)
+  const [dotsColor, setDotsColor] = useState('#334155')
+
+  useEffect(() => {
+    const updateColor = (): void => {
+      const isLight = document.body.classList.contains('light-mode')
+      setDotsColor(isLight ? '#94a3b8' : '#334155')
+    }
+
+    updateColor()
+
+    const observer = new MutationObserver(updateColor)
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+
+    return () => observer.disconnect()
+  }, [])
 
   const {
     nodes,
@@ -46,7 +60,7 @@ function WorkflowCanvas(): JSX.Element {
     type: 'smoothstep',
     animated: true,
     style: {
-      stroke: '#71717a',
+      stroke: 'var(--text-muted)',
       strokeWidth: 2
     }
   }
@@ -98,21 +112,21 @@ function WorkflowCanvas(): JSX.Element {
           draggable
           onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'trigger')}
         >
-          <Plus size={14} /> Trigger Node
+          <Plus size={14} /> Trigger
         </div>
         <div
           className={styles.draggable}
           draggable
           onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'action')}
         >
-          <Plus size={14} /> Action Node
+          <Plus size={14} /> Action
         </div>
 
         <div
           className={styles.draggable}
           draggable
           onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'condition')}
-          style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+          style={{ borderColor: 'var(--accent-warning)', color: 'var(--accent-warning)' }}
         >
           <Split size={14} /> Logic
         </div>
@@ -152,15 +166,14 @@ function WorkflowCanvas(): JSX.Element {
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}
-            colorMode="dark"
           >
             <Background
               variant={BackgroundVariant.Dots}
-              gap={20}
+              gap={24}
               size={1.5}
-              color="#334155"
+              color={dotsColor}
               style={{
-                background: 'radial-gradient(circle at 50% 50%, #0e1319 0%, #0a0e14 100%)'
+                backgroundColor: 'var(--bg-canvas)'
               }}
             />
 
