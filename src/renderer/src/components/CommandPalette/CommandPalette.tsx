@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, JSX } from 'react'
+import { useEffect, useState, useRef, useMemo, JSX, useCallback } from 'react'
 import styles from './CommandPalette.module.scss'
 import {
   Search,
@@ -10,9 +10,12 @@ import {
   Play,
   Square,
   ArrowUpCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
+  WorkflowIcon
 } from 'lucide-react'
 import { Project } from '@renderer/types'
+import { useToastStore } from '@renderer/store/useToastStore'
+import { useWorkflowStore } from '@renderer/store/useWorkflowStore'
 
 interface Props {
   projects: Project[]
@@ -27,7 +30,7 @@ type PaletteItem = {
   subtext?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any
-  group: 'Projects' | 'Scripts' | 'Global' | 'Processes' | 'Docker'
+  group: 'Projects' | 'Scripts' | 'Global' | 'Processes' | 'Docker' | 'Workflows'
   action: () => void
 }
 
@@ -35,28 +38,25 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const addToast = useToastStore((state) => state.addToast)
+  const workflows = useWorkflowStore((state) => state.workflows)
 
-  const runCommand = (
-    promise: Promise<unknown>,
-    successTitle: string = 'Success'
-  ): void => {
-    promise
-      .then((result) => {
-        new Notification(successTitle, {
-          body: typeof result === 'string' ? result : 'Command executed successfully',
-          silent: false
+  const runCommand = useCallback(
+    (promise: Promise<unknown>, successTitle: string = 'Success'): void => {
+      promise
+        .then((result) => {
+          addToast(typeof result === 'string' ? result : successTitle, 'success')
         })
-      })
-      .catch((err) => {
-        const msg = err.message
-          ? err.message.replace('Error invoking remote method:', '').trim()
-          : 'Unknown error occurred'
+        .catch((err) => {
+          const msg = err.message
+            ? err.message.replace('Error invoking remote method:', '').trim()
+            : 'Unknown error occurred'
 
-        new Notification('Command Failed', {
-          body: msg
+          addToast(msg, 'error')
         })
-      })
-  }
+    },
+    [addToast]
+  )
 
   const items: PaletteItem[] = useMemo(() => {
     const list: PaletteItem[] = []
@@ -176,8 +176,22 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
       })
     })
 
+    workflows.forEach((w) => {
+      list.push({
+        id: `wf-${w.id}`,
+        title: w.name,
+        subtext: `Run automation workflow`,
+        icon: WorkflowIcon,
+        group: 'Workflows',
+        action: () => {
+          // Pass the full object to ensure Main process has data
+          runCommand(window.api.runWorkflow(w), `Workflow "${w.name}" Started`)
+        }
+      })
+    })
+
     return list
-  }, [projects, onRunScript])
+  }, [projects, onRunScript, runCommand, workflows])
 
   const filteredItems = useMemo(() => {
     if (!query) return items.slice(0, 50)

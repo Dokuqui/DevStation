@@ -5,13 +5,14 @@ import {
   Background,
   useReactFlow,
   ReactFlowProvider,
-  BackgroundVariant
+  BackgroundVariant,
+  ConnectionLineType
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import styles from './WorkflowBuilder.module.scss'
 import { useWorkflowStore } from '../../store/useWorkflowStore'
 import { nodeTypes } from './nodeTypes'
-import { Plus, Save, CheckCircle, Edit3 } from 'lucide-react'
+import { Plus, Save, CheckCircle, Edit3, Split } from 'lucide-react'
 import { PropertiesPanel } from './PropertiesPanel'
 import { useState } from 'react'
 
@@ -20,16 +21,35 @@ function WorkflowCanvas(): JSX.Element {
   const { screenToFlowPosition } = useReactFlow()
   const [isSaved, setIsSaved] = useState(false)
 
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, saveWorkflow, workflows, activeWorkflowId, updateWorkflowName } =
-    useWorkflowStore()
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    saveWorkflow,
+    workflows,
+    activeWorkflowId,
+    updateWorkflowName
+  } = useWorkflowStore()
 
-  const activeWorkflow = workflows.find(w => w.id === activeWorkflowId)
+  const activeWorkflow = workflows.find((w) => w.id === activeWorkflowId)
   const workflowName = activeWorkflow?.name || 'Untitled Workflow'
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
   }, [])
+
+  const defaultEdgeOptions = {
+    type: 'smoothstep',
+    animated: true,
+    style: {
+      stroke: '#71717a',
+      strokeWidth: 2
+    }
+  }
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -42,14 +62,21 @@ function WorkflowCanvas(): JSX.Element {
         y: event.clientY
       })
 
+      let initialData = {}
+
+      if (type === 'trigger') {
+        initialData = { label: 'New Trigger', type: 'file-change' }
+      } else if (type === 'action') {
+        initialData = { label: 'New Action', type: 'shell' }
+      } else if (type === 'condition') {
+        initialData = { label: 'Check Output', type: 'condition', operator: 'contains' }
+      }
+
       const newNode = {
         id: crypto.randomUUID(),
         type,
         position,
-        data: {
-          label: type === 'trigger' ? 'New Trigger' : 'New Action',
-          type: type === 'trigger' ? 'file-change' : 'shell'
-        }
+        data: initialData
       }
 
       addNode(newNode)
@@ -81,11 +108,20 @@ function WorkflowCanvas(): JSX.Element {
           <Plus size={14} /> Action Node
         </div>
 
+        <div
+          className={styles.draggable}
+          draggable
+          onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'condition')}
+          style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+        >
+          <Split size={14} /> Logic
+        </div>
+
         <div className={styles.divider} />
         <div className={styles.nameInputWrapper}>
           <Edit3 size={14} className={styles.inputIcon} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             className={styles.nameInput}
             value={workflowName}
             onChange={(e) => updateWorkflowName(e.target.value)}
@@ -104,6 +140,8 @@ function WorkflowCanvas(): JSX.Element {
       <div className={styles.wrapper}>
         <div className={styles.canvasWrapper} ref={wrapperRef}>
           <ReactFlow
+            defaultEdgeOptions={defaultEdgeOptions}
+            connectionLineType={ConnectionLineType.SmoothStep}
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}

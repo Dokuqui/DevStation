@@ -93,7 +93,19 @@ const api = {
 
   stopAllWorkflows: () => ipcRenderer.invoke('workflow:stop-all'),
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getAllWorkflows: (): Promise<any> => ipcRenderer.invoke('workflow:get-all'),
+
+  onShowToast: (callback: (message: string, type: 'success' | 'error' | 'info') => void) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listener = (_event: any, data: { message: string; type: any }): void =>
+      callback(data.message, data.type)
+
+    ipcRenderer.on('toast:show', listener)
+    return () => ipcRenderer.removeListener('toast:show', listener)
+  },
+
+  runWorkflow: (workflowId: string) => ipcRenderer.invoke('commands:run-workflow', workflowId)
 }
 
 if (process.contextIsolated) {

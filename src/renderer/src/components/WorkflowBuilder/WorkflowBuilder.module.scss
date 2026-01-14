@@ -119,9 +119,10 @@
   border-radius: var(--radius);
   min-width: 220px;
   box-shadow: var(--shadow-card);
-  overflow: hidden;
+  overflow: visible;
   font-family: 'Inter', sans-serif;
   transition: all var(--transition-fast);
+  position: relative;
 
   &:hover {
     border-color: var(--text-secondary);
@@ -135,6 +136,8 @@
   }
 
   .nodeHeader {
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
     padding: 12px 16px;
     font-size: 0.95rem;
     font-weight: 700;
@@ -189,16 +192,53 @@
 }
 
 .handle {
-  width: 14px;
-  height: 14px;
+  width: 14px !important;
+  height: 14px !important;
   background: var(--text-main);
-  border: 2px solid var(--accent-primary);
-  transition: all var(--transition-fast);
-  z-index: 10;
+  border: 2px solid var(--bg-card);
+  border-radius: 50%;
+
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center center;
+
+  transition:
+    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  z-index: 100;
+  cursor: crosshair;
+
+  outline: 4px solid transparent;
 
   &:hover {
     background: var(--accent-primary);
-    transform: scale(1.2);
+    border-color: var(--text-main);
+
+    transform: translate(-50%, -50%) scale(1.6);
+
+    z-index: 101;
+  }
+}
+
+.logicHandle {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50%;
+  border: 3px solid var(--bg-card);
+
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center center;
+
+  transition:
+    transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    background-color 0.2s ease;
+
+  z-index: 100;
+  cursor: pointer;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.8);
   }
 }
 

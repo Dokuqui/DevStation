@@ -68,6 +68,13 @@ declare global {
       stopAllWorkflows: () => Promise<void>
 
       getAllWorkflows: () => Promise<Workflow[]>
+
+      onShowToast: (
+        callback: (message: string, type: 'success' | 'error' | 'info') => void
+      ) => () => void
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      runWorkflow: (workflow: any) => Promise<string>
     }
   }
 }

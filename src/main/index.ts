@@ -26,7 +26,12 @@ import {
   startDocker,
   stopDocker
 } from './commands'
-import { registerAllWorkflows, registerWorkflow, stopAllWorkflows, unregisterWorkflow } from './workflows/scheduler'
+import {
+  registerAllWorkflows,
+  registerWorkflow,
+  stopAllWorkflows,
+  unregisterWorkflow
+} from './workflows/scheduler'
 import { runWorkflow } from './workflows/engine'
 
 interface StoreType {
@@ -151,9 +156,9 @@ ipcMain.handle('commands:docker-compose-down', async (event) => {
 ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
   const currentWorkflows = store.get('workflows')
 
-  const index = currentWorkflows.findIndex(w => w.id === workflow.id)
+  const index = currentWorkflows.findIndex((w) => w.id === workflow.id)
   let newWorkflows
-  
+
   if (index !== -1) {
     newWorkflows = [...currentWorkflows]
     newWorkflows[index] = workflow
@@ -162,7 +167,7 @@ ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
   }
 
   store.set('workflows', newWorkflows)
-  
+
   registerWorkflow(workflow)
   return { success: true }
 })
@@ -177,17 +182,22 @@ ipcMain.handle('workflow:execute', (_event, workflow: Workflow) => {
 
 ipcMain.handle('workflow:delete', (_event, workflowId: string) => {
   unregisterWorkflow(workflowId)
-  
+
   const current = store.get('workflows')
-  const filtered = current.filter(w => w.id !== workflowId)
+  const filtered = current.filter((w) => w.id !== workflowId)
   store.set('workflows', filtered)
-  
+
   return { success: true }
 })
 
 ipcMain.handle('workflow:stop-all', () => {
   stopAllWorkflows()
   return { success: true }
+})
+
+ipcMain.handle('commands:run-workflow', async (_event, workflowJson) => {
+  runWorkflow(workflowJson)
+  return 'Workflow started'
 })
 
 function createWindow(): void {

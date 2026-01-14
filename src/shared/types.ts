@@ -83,9 +83,23 @@ export interface SystemStats {
 export interface WorkflowNodeData extends Record<string, unknown> {
   label: string
   type: string
+
   command?: string
   cron?: string
   path?: string
+  message?: string
+
+  duration?: number
+
+  url?: string
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD'
+  body?: string
+  headers?: string
+  notificationType?: 'success' | 'error' | 'info'
+
+  variable?: string
+  operator?: 'contains' | 'equals' | 'gt' | 'lt'
+  comparisonValue?: string
 }
 
 export interface WorkflowNode {
@@ -99,6 +113,8 @@ export interface WorkflowEdge {
   id: string
   source: string
   target: string
+  sourceHandle?: string | null
+  targetHandle?: string | null
 }
 
 export interface Workflow {

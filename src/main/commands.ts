@@ -4,6 +4,15 @@ import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
+async function isDockerInstalled(): Promise<boolean> {
+  try {
+    await execAsync('docker --version')
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function killProcessByName(name: string): Promise<string> {
   return new Promise((resolve) => {
     const isWin = os.platform() === 'win32'
@@ -24,25 +33,26 @@ export async function killProcessByName(name: string): Promise<string> {
 }
 
 export async function restartDocker(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const isWin = os.platform() === 'win32'
-    const isMac = os.platform() === 'darwin'
+  const isWin = os.platform() === 'win32'
+  const isMac = os.platform() === 'darwin'
 
-    let cmd = ''
+  let cmd = ''
 
-    if (isWin) {
-      cmd = 'net stop com.docker.service && net start com.docker.service'
-    } else if (isMac) {
-      cmd = 'osascript -e \'quit app "Docker"\' && open -a Docker'
-    } else {
-      cmd = 'sudo systemctl restart docker'
-    }
+  if (isWin) {
+    cmd = 'powershell -NoProfile -Command "Restart-Service *docker* -Force"'
+  } else if (isMac) {
+    cmd = 'osascript -e \'quit app "Docker"\' && open -a Docker'
+  } else {
+    cmd = 'sudo systemctl restart docker'
+  }
 
-    exec(cmd, (err, stdout) => {
-      if (err) reject(err)
-      else resolve(stdout)
-    })
-  })
+  try {
+    await execAsync(cmd)
+    return 'Docker restarted successfully'
+  } catch (err) {
+    handleDockerError(err)
+    return 'Error'
+  }
 }
 
 export async function startDocker(): Promise<string> {
@@ -50,7 +60,7 @@ export async function startDocker(): Promise<string> {
   let cmd = ''
 
   if (platform === 'win32') {
-    cmd = 'powershell -Command "Start-Service *docker*"'
+    cmd = 'powershell -NoProfile -Command "Start-Service *docker*"'
   } else if (platform === 'darwin') {
     cmd = 'open -a Docker'
   } else {
@@ -61,7 +71,8 @@ export async function startDocker(): Promise<string> {
     await execAsync(cmd)
     return 'Docker started'
   } catch (err) {
-    throw new Error(`Failed to start Docker: ${(err as Error).message}`)
+    handleDockerError(err)
+    return 'Error'
   }
 }
 
@@ -70,7 +81,7 @@ export async function stopDocker(): Promise<string> {
   let cmd = ''
 
   if (platform === 'win32') {
-    cmd = 'powershell -Command "Stop-Service *docker* -Force"'
+    cmd = 'powershell -NoProfile -Command "Stop-Service *docker* -Force"'
   } else if (platform === 'darwin') {
     cmd = 'osascript -e \'quit app "Docker"\''
   } else {
@@ -81,11 +92,16 @@ export async function stopDocker(): Promise<string> {
     await execAsync(cmd)
     return 'Docker stopped'
   } catch (err) {
-    throw new Error(`Failed to stop Docker: ${(err as Error).message}`)
+    handleDockerError(err)
+    return 'Error'
   }
 }
 
 export async function dockerPrune(): Promise<string> {
+  if (!(await isDockerInstalled())) {
+    throw new Error('Docker is not installed or not found in PATH.')
+  }
+
   try {
     await execAsync('docker system prune -af --volumes')
     return 'Docker pruned (unused containers, images, volumes removed)'
@@ -95,6 +111,10 @@ export async function dockerPrune(): Promise<string> {
 }
 
 export async function dockerComposeUp(cwd: string): Promise<string> {
+  if (!(await isDockerInstalled())) {
+    throw new Error('Docker is not installed.')
+  }
+
   try {
     await execAsync('docker-compose up -d', { cwd })
     return 'docker-compose up -d executed'
@@ -104,10 +124,38 @@ export async function dockerComposeUp(cwd: string): Promise<string> {
 }
 
 export async function dockerComposeDown(cwd: string): Promise<string> {
+  if (!(await isDockerInstalled())) {
+    throw new Error('Docker is not installed.')
+  }
+
   try {
     await execAsync('docker-compose down', { cwd })
     return 'docker-compose down executed'
   } catch (err) {
     throw new Error(`docker-compose down failed: ${(err as Error).message}`)
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleDockerError(err: any): void {
+  const msg = (err.message || '').toString()
+
+  if (
+    msg.includes('OpenError') ||
+    msg.includes('CloseError') ||
+    msg.includes('Access is denied') ||
+    msg.includes('requires elevation') ||
+    msg.includes('ServiceCommandException') ||
+    msg.includes("Impossible d'ouvrir le service")
+  ) {
+    throw new Error(
+      'PERMISSION DENIED: You must run DevStation as Administrator to control Docker services.'
+    )
+  }
+
+  if (msg.includes('Cannot find any service') || msg.includes('does not exist')) {
+    throw new Error('DOCKER MISSING: Docker Desktop service not found. Is it installed?')
+  }
+
+  throw new Error(msg)
 }

@@ -11,11 +11,13 @@ import { SystemMonitor } from './components/SystemMonitor/SystemMonitor'
 import { WorkflowBuilder } from './components/WorkflowBuilder/WorkflowBuilder'
 import { useWorkflowStore } from './store/useWorkflowStore'
 import { WorkflowList } from './components/WorkflowList/WorkflowList'
+import { ToastContainer } from './components/Toast/ToastContainer'
+import { useToastStore } from './store/useToastStore'
 
 type View = 'projects' | 'system' | 'workflows'
 
 function App(): JSX.Element {
-  const loadWorkflows = useWorkflowStore(state => state.loadWorkflows)
+  const loadWorkflows = useWorkflowStore((state) => state.loadWorkflows)
   const [currentView, setCurrentView] = useState<View>('projects')
   const [projects, setProjects] = useState<Project[]>([])
   const [activeSession, setActiveSession] = useState<{
@@ -28,6 +30,17 @@ function App(): JSX.Element {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
 
   const updateTimes = useTimeStore((state) => state.updateTimes)
+  const addToast = useToastStore((state) => state.addToast)
+
+  useEffect(() => {
+    const removeListener = window.api.onShowToast((msg, type) => {
+      addToast(msg, type)
+    })
+
+    return () => {
+      removeListener()
+    }
+  }, [])
 
   useEffect(() => {
     window.api.getAvailableIDEs().catch(console.error)
@@ -39,7 +52,7 @@ function App(): JSX.Element {
     return () => {
       removeListener()
     }
-  }, [updateTimes])
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -91,6 +104,7 @@ function App(): JSX.Element {
   return (
     <>
       <div className="titlebar" />
+      <ToastContainer />
       <div className={styles.container}>
         <aside className={styles.sidebar}>
           <div className={styles.logo}>
