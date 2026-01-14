@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import Store from 'electron-store'
+import { getStore } from './store'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -33,17 +33,8 @@ import {
   unregisterWorkflow
 } from './workflows/scheduler'
 import { runWorkflow } from './workflows/engine'
-
-interface StoreType {
-  workflows: Workflow[]
-}
-
-// @ts-ignore (TypeScript might complain, but this fixes the runtime crash)
-const store = new Store.default<StoreType>({
-  defaults: {
-    workflows: []
-  }
-})
+import { cloneRepository, getGitStatus, gitCheckout, gitFetch, gitPull, gitPush } from './git'
+import { loginWithGitHub, getGitHubRepos, isGitHubLoggedIn, logoutGitHub } from './github'
 
 function generateId(projectPath: string): string {
   return createHash('md5').update(projectPath).digest('hex')
@@ -174,8 +165,9 @@ ipcMain.handle('commands:docker-compose-down', async (event) => {
   return await dockerComposeDown(cwd)
 })
 
-ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
-  const currentWorkflows = store.get('workflows')
+ipcMain.handle('workflow:save', async (_event, workflow: Workflow) => {
+  const store = await getStore() // Load store dynamically
+  const currentWorkflows = (store.get('workflows') as Workflow[]) || []
 
   const index = currentWorkflows.findIndex((w) => w.id === workflow.id)
   let newWorkflows
@@ -188,26 +180,27 @@ ipcMain.handle('workflow:save', (_event, workflow: Workflow) => {
   }
 
   store.set('workflows', newWorkflows)
-
   registerWorkflow(workflow)
   return { success: true }
 })
 
-ipcMain.handle('workflow:get-all', () => {
-  return store.get('workflows')
+ipcMain.handle('workflow:get-all', async () => {
+  const store = await getStore()
+  return store.get('workflows') || []
 })
 
 ipcMain.handle('workflow:execute', (_event, workflow: Workflow) => {
   runWorkflow(workflow)
 })
 
-ipcMain.handle('workflow:delete', (_event, workflowId: string) => {
+ipcMain.handle('workflow:delete', async (_event, workflowId: string) => {
   unregisterWorkflow(workflowId)
 
-  const current = store.get('workflows')
+  const store = await getStore()
+  const current = (store.get('workflows') as Workflow[]) || []
   const filtered = current.filter((w) => w.id !== workflowId)
-  store.set('workflows', filtered)
 
+  store.set('workflows', filtered)
   return { success: true }
 })
 
@@ -219,6 +212,46 @@ ipcMain.handle('workflow:stop-all', () => {
 ipcMain.handle('commands:run-workflow', async (_event, workflowJson) => {
   runWorkflow(workflowJson)
   return 'Workflow started'
+})
+
+ipcMain.handle('git:clone', async (_event, { url, parentPath, shallow }) => {
+  return await cloneRepository(url, parentPath, shallow)
+})
+
+ipcMain.handle('git:status', async (_event, path: string) => {
+  return await getGitStatus(path)
+})
+
+ipcMain.handle('git:pull', async (_event, path: string) => {
+  return await gitPull(path)
+})
+
+ipcMain.handle('git:push', async (_event, path: string) => {
+  return await gitPush(path)
+})
+
+ipcMain.handle('git:checkout', async (_event, { path, branch }) => {
+  return await gitCheckout(path, branch)
+})
+
+ipcMain.handle('git:fetch', async (_event, path: string) => {
+  return await gitFetch(path)
+})
+
+ipcMain.handle('github:login', async () => {
+  return await loginWithGitHub()
+})
+
+ipcMain.handle('github:repos', async () => {
+  return await getGitHubRepos()
+})
+
+ipcMain.handle('github:status', () => {
+  return isGitHubLoggedIn()
+})
+
+ipcMain.handle('github:logout', () => {
+  return logoutGitHub()
 })
 
 function createWindow(): void {
@@ -277,14 +310,15 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.dokuqui.devstation')
 
   app.on('browser-window-created', (_e, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const savedWorkflows = store.get('workflows')
+  const store = await getStore()
+  const savedWorkflows = (store.get('workflows') as Workflow[]) || []
   if (savedWorkflows.length > 0) {
     console.log(`[Startup] Restoring ${savedWorkflows.length} workflows...`)
     registerAllWorkflows(savedWorkflows)

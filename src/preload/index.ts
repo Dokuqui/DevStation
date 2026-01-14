@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 import { Project, IDE, SystemStats, Workflow } from '@renderer/types'
+import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
@@ -107,16 +108,41 @@ const api = {
 
   runWorkflow: (workflowId: string) => ipcRenderer.invoke('commands:run-workflow', workflowId),
 
-  updateTheme: (theme: 'dark' | 'light') => ipcRenderer.invoke('window:update-theme', theme)
+  updateTheme: (theme: 'dark' | 'light') => ipcRenderer.invoke('window:update-theme', theme),
+
+  gitClone: (url: string, parentPath: string, shallow: boolean) =>
+    ipcRenderer.invoke('git:clone', { url, parentPath, shallow }),
+
+  gitStatus: (path: string) => ipcRenderer.invoke('git:status', path),
+
+  gitPull: (path: string) => ipcRenderer.invoke('git:pull', path),
+
+  gitPush: (path: string) => ipcRenderer.invoke('git:push', path),
+
+  gitFetch: (path: string) => ipcRenderer.invoke('git:fetch', path),
+
+  gitCheckout: (path: string, branch: string) =>
+    ipcRenderer.invoke('git:checkout', { path, branch }),
+
+  githubLogin: () => ipcRenderer.invoke('github:login'),
+
+  githubLogout: () => ipcRenderer.invoke('github:logout'),
+
+  githubRepos: () => ipcRenderer.invoke('github:repos'),
+
+  githubStatus: () => ipcRenderer.invoke('github:status')
 }
 
 if (process.contextIsolated) {
   try {
+    contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
   } catch (error) {
     console.error('Failed to expose API via contextBridge:', error)
   }
 } else {
-  // @ts-ignore (define in d.ts)
+  // @ts-ignore (define in dts)
+  window.electron = electronAPI
+  // @ts-ignore (define in dts)
   window.api = api
 }

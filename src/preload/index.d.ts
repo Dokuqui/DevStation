@@ -77,6 +77,28 @@ declare global {
       runWorkflow: (workflow: any) => Promise<string>
 
       updateTheme: (theme: 'dark' | 'light') => Promise<void>
+
+      gitClone: (url: string, parentPath: string, shallow: boolean) => Promise<string>
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      gitStatus: (path: string) => Promise<any>
+
+      gitPull: (path: string) => Promise<void>
+
+      gitPush: (path: string) => Promise<void>
+
+      gitFetch: (path: string) => Promise<void>
+
+      gitCheckout: (path: string, branch: string) => Promise<void>
+
+      githubLogin: () => Promise<boolean>
+
+      githubLogout: () => Promise<boolean>
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      githubRepos: () => Promise<any[]>
+
+      githubStatus: () => Promise<boolean>
     }
   }
 }

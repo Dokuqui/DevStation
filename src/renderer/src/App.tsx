@@ -3,6 +3,7 @@ import styles from './App.module.scss'
 import {
   ChevronLeft,
   Cpu,
+  Download,
   FolderSearch,
   LayoutGrid,
   Moon,
@@ -22,6 +23,7 @@ import { useWorkflowStore } from './store/useWorkflowStore'
 import { WorkflowList } from './components/WorkflowList/WorkflowList'
 import { ToastContainer } from './components/Toast/ToastContainer'
 import { useToastStore } from './store/useToastStore'
+import { CloneModal } from './components/CloneModal/CloneModal'
 
 type View = 'projects' | 'system' | 'workflows' | 'settings'
 
@@ -38,6 +40,7 @@ function App(): JSX.Element {
   const [scanLogs, setScanLogs] = useState<string[]>([])
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [isCloneOpen, setIsCloneOpen] = useState(false)
 
   const updateTimes = useTimeStore((state) => state.updateTimes)
   const addToast = useToastStore((state) => state.addToast)
@@ -107,8 +110,9 @@ function App(): JSX.Element {
     loadWorkflows()
   }, [])
 
-  const handleScan = async (): Promise<void> => {
-    const path = await window.api.selectFolder()
+  const handleScan = async (pathOverride?: string): Promise<void> => {
+    const path = pathOverride || (await window.api.selectFolder())
+
     if (!path) return
 
     setIsScanning(true)
@@ -186,9 +190,20 @@ function App(): JSX.Element {
 
           <div className={styles.spacer} />
 
-          <button className={styles.btnPrimary} onClick={handleScan} disabled={isScanning}>
-            <FolderSearch size={16} />
-            {isScanning ? 'Scanning...' : 'Scan Folder'}
+          <button
+            className={styles.navItem}
+            onClick={() => setIsCloneOpen(true)}
+            style={{
+              justifyContent: 'center',
+              marginBottom: '8px',
+              border: '1px solid var(--border)'
+            }}
+          >
+            <Download size={16} /> Clone Repo
+          </button>
+
+          <button className={styles.btnPrimary} onClick={() => handleScan()}>
+            <FolderSearch size={16} /> Scan Folder
           </button>
         </aside>
 
@@ -293,6 +308,14 @@ function App(): JSX.Element {
             project={activeSession.project}
           />
         )}
+
+        <CloneModal
+          isOpen={isCloneOpen}
+          onClose={() => setIsCloneOpen(false)}
+          onCloneSuccess={(parentPath) => {
+            handleScan(parentPath)
+          }}
+        />
 
         {isScanning && <ScanningModal logs={scanLogs} />}
       </div>

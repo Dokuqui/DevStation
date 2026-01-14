@@ -382,3 +382,144 @@
     transform: rotate(360deg);
   }
 }
+
+.gitSection {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+.gitToggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+  }
+}
+
+.gitPanel {
+  margin-top: 10px;
+  background: var(--bg-app); /* Slightly darker/inset look */
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  color: var(--text-muted);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.branchRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  select {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--text-secondary);
+    }
+  }
+
+  button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 30px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    &:hover {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+  }
+}
+
+.syncButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.pullBtn,
+.pushBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.pullBtn {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-success);
+  border-color: rgba(16, 185, 129, 0.2);
+
+  &:hover {
+    background: rgba(16, 185, 129, 0.2);
+  }
+}
+
+.pushBtn {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--accent-primary);
+  border-color: rgba(124, 58, 237, 0.2);
+
+  &:hover {
+    background: rgba(124, 58, 237, 0.2);
+  }
+}
+
+.noGit {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 10px;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
