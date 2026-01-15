@@ -1,3 +1,5 @@
+@use '../../assets/mixins' as *;
+
 .container {
   height: 100%;
   display: flex;
@@ -9,9 +11,9 @@
   margin-bottom: 2rem;
   h1 {
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-main);
-    margin: 0;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -22,6 +24,7 @@
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+  @include scrollbar;
 }
 
 .section {
@@ -29,56 +32,26 @@
 }
 
 .sectionHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  @include flex(flex-start, center, 10px);
   margin-bottom: 1rem;
   color: var(--accent-primary);
 
   h2 {
     font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
+    font-weight: 700;
     color: var(--text-main);
   }
 }
 
-.selectInput {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 8px 12px;
-  border-radius: 6px;
-  width: 200px;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-
-  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-  background-repeat: no-repeat;
-  background-position: right 10px top 50%;
-  background-size: 10px auto;
-  padding-right: 30px;
-
-  &:focus {
-    border-color: var(--accent-primary);
-  }
-}
-
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  @include card-base;
   padding: 0;
   overflow: hidden;
 }
 
 .row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 1.5rem;
-  gap: 20px;
+  @include flex(space-between, center, 20px);
+  padding: 1.5rem;
 }
 
 .divider {
@@ -88,62 +61,57 @@
 }
 
 .label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  @include flex-col(4px);
 
   span {
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-main);
   }
 
   small {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
   }
 }
 
 .textInput {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 8px 12px;
-  border-radius: 6px;
-  width: 250px;
+  @include input-base;
+  width: 280px;
   text-align: right;
-  outline: none;
-  &:focus {
-    border-color: var(--accent-primary);
-  }
 }
 
 .numberInput {
-  @extend .textInput;
-  width: 80px;
+  @include input-base;
+  width: 100px;
+  text-align: right;
+}
+
+.selectInput {
+  @include input-base;
+  width: 220px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
 }
 
 .inputWithAction {
-  display: flex;
-  gap: 8px;
+  @include flex(flex-start, center, 8px);
 
   input {
-    @extend .textInput;
-    width: 250px;
-    text-align: left;
+    @include input-base;
+    width: 280px;
     cursor: default;
   }
 
   button {
+    @include btn-icon;
     background: var(--bg-hover);
     border: 1px solid var(--border);
-    color: var(--text-main);
-    width: 36px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+
     &:hover {
       border-color: var(--text-secondary);
     }
@@ -151,32 +119,28 @@
 }
 
 .toggleGroup {
-  display: flex;
+  @include flex(flex-start, center, 4px);
   background: var(--bg-input);
   padding: 4px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  gap: 4px;
 }
 
 .toggleBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
+  @include btn-base;
   background: transparent;
   color: var(--text-muted);
   font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 6px 12px;
 
   &.active {
     background: var(--bg-card);
     color: var(--text-main);
     box-shadow: var(--shadow-sm);
+  }
+
+  &:hover:not(.active) {
+    color: var(--text-main);
   }
 }
 
@@ -194,11 +158,8 @@
 
   .slider {
     position: absolute;
+    inset: 0;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     background-color: var(--bg-input);
     border: 1px solid var(--border);
     transition: 0.3s;
@@ -220,18 +181,17 @@
   input:checked + .slider {
     background-color: var(--accent-success);
     border-color: var(--accent-success);
-  }
-
-  input:checked + .slider:before {
-    transform: translateX(20px);
-    background-color: white;
+    &:before {
+      transform: translateX(20px);
+      background-color: white;
+    }
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;

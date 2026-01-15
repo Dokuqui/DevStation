@@ -1,29 +1,24 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { ProjectDetector } from './base'
-import { Project } from '@renderer/types'
+import { BaseDetector } from './base'
+import { Project } from '../../shared/types'
 
 const TARGET_FILES = ['pyproject.toml', 'requirements.txt', 'Pipfile', 'main.py', 'app.py']
 
-export const PythonDetector: ProjectDetector = {
-  async isMatch(folderPath: string) {
-    for (const file of TARGET_FILES) {
-      try {
-        await fs.access(path.join(folderPath, file))
-        return true
-      } catch {
-        continue
-      }
-    }
+class PythonDetectorImpl extends BaseDetector {
+  async isMatch(folderPath: string): Promise<boolean> {
+    if (await this.anyFileExists(folderPath, TARGET_FILES)) return true
+
+    // Fallback: check for any .py file
     try {
       const files = await fs.readdir(folderPath)
       return files.some((f) => f.endsWith('.py'))
     } catch {
       return false
     }
-  },
+  }
 
-  async parse(folderPath: string) {
+  async parse(folderPath: string): Promise<Partial<Project>> {
     const name = path.basename(folderPath)
     const scripts: Record<string, string> = {}
 
@@ -35,12 +30,9 @@ export const PythonDetector: ProjectDetector = {
     let venvPath = ''
 
     for (const vName of venvNames) {
-      try {
-        await fs.access(path.join(folderPath, vName))
+      if (await this.fileExists(folderPath, vName)) {
         venvPath = vName
         break
-      } catch {
-        // continue
       }
     }
 
@@ -49,50 +41,40 @@ export const PythonDetector: ProjectDetector = {
       const pythonExc = isWin ? 'python.exe' : 'python'
       const pipExc = isWin ? 'pip.exe' : 'pip'
 
-      const venvPython = path.join(venvPath, binDir, pythonExc)
-      const venvPip = path.join(venvPath, binDir, pipExc)
-
-      runner = venvPython
-      install = `${venvPip} install -r requirements.txt`
+      runner = path.join(venvPath, binDir, pythonExc)
+      install = `${path.join(venvPath, binDir, pipExc)} install -r requirements.txt`
     } else {
       scripts['init:venv'] = `${isWin ? 'python' : 'python3'} -m venv .venv`
     }
 
-    try {
-      const tomlPath = path.join(folderPath, 'pyproject.toml')
-      const tomlContent = await fs.readFile(tomlPath, 'utf-8')
+    const tomlContent = await this.readFile(folderPath, 'pyproject.toml')
+    if (tomlContent) {
       const lines = tomlContent.split('\n')
-
       let currentSection = ''
-
       for (const line of lines) {
         const trimmed = line.trim()
         if (!trimmed || trimmed.startsWith('#')) continue
 
         if (trimmed.startsWith('[')) {
-          currentSection = trimmed.replace(/^\[+|\]+$/g, '').replace(/"/g, '').trim()
-
-          if (currentSection.startsWith('tool.poe.tasks.') && currentSection.length > 'tool.poe.tasks.'.length) {
+          currentSection = trimmed
+            .replace(/^\[+|\]+$/g, '')
+            .replace(/"/g, '')
+            .trim()
+          if (currentSection.startsWith('tool.poe.tasks.') && currentSection.length > 15) {
             const taskName = currentSection.replace('tool.poe.tasks.', '').trim()
             scripts[taskName] = `-m poethepoet ${taskName}`
           }
-
           continue
         }
 
         if (currentSection === 'tool.poe.tasks') {
           const match = trimmed.match(/^"?([\w-]+)"?\s*=/)
-
           if (match) {
             const taskName = match[1]
-            if (!scripts[taskName]) {
-              scripts[taskName] = `-m poethepoet ${taskName}`
-            }
+            if (!scripts[taskName]) scripts[taskName] = `-m poethepoet ${taskName}`
           }
         }
       }
-    } catch {
-      /* ignore */
     }
 
     const searchDirs = ['.', 'src', 'app', 'lib']
@@ -105,60 +87,40 @@ export const PythonDetector: ProjectDetector = {
       'wsgi.py',
       'asgi.py'
     ]
-
     let entryScript = ''
 
     outerLoop: for (const dir of searchDirs) {
       for (const file of entryNames) {
         const relPath = dir === '.' ? file : path.join(dir, file)
-
-        try {
-          await fs.access(path.join(folderPath, relPath))
-
+        if (await this.fileExists(folderPath, relPath)) {
           if (file === '__main__.py') {
-            if (dir !== '.') {
-              entryScript = `-m ${dir}`
+            entryScript = dir !== '.' ? `-m ${dir}` : '.'
+          } else if (dir !== '.') {
+            if (await this.fileExists(folderPath, path.join(dir, '__init__.py'))) {
+              entryScript = `-m ${dir}.${path.basename(file, '.py')}`
             } else {
-              entryScript = '.'
+              entryScript = relPath
             }
-            break outerLoop
+          } else {
+            entryScript = relPath
           }
-
-          if (dir !== '.') {
-            try {
-              await fs.access(path.join(folderPath, dir, '__init__.py'))
-              const moduleName = path
-                .join(dir, path.basename(file, '.py'))
-                .split(path.sep)
-                .join('.')
-              entryScript = `-m ${moduleName}`
-              break outerLoop
-            } catch {
-              // No __init__.py
-            }
-          }
-
-          entryScript = relPath
           break outerLoop
-        } catch {
-          continue
         }
       }
     }
 
-    if (entryScript) {
-      scripts['run'] = entryScript
-    } else {
-      scripts['help'] = '--version'
-    }
+    if (entryScript) scripts['run'] = entryScript
+    else scripts['help'] = '--version'
 
     return {
       type: 'python',
-      name: name,
+      name,
       version: '1.0.0',
-      scripts: scripts,
+      scripts,
       runnerCommand: runner,
       installCommand: install
     } as Partial<Project>
   }
 }
+
+export const PythonDetector = new PythonDetectorImpl()

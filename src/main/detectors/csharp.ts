@@ -1,20 +1,26 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { ProjectDetector } from './base'
+import { BaseDetector } from './base'
 import { Project } from '../../shared/types'
 
-export const CSharpDetector: ProjectDetector = {
-  async isMatch(folderPath: string) {
+class CSharpDetectorImpl extends BaseDetector {
+  async isMatch(folderPath: string): Promise<boolean> {
     try {
       const files = await fs.readdir(folderPath)
       return files.some((f) => f.endsWith('.csproj') || f.endsWith('.sln'))
     } catch {
       return false
     }
-  },
+  }
 
-  async parse(folderPath: string) {
-    const files = await fs.readdir(folderPath)
+  async parse(folderPath: string): Promise<Partial<Project>> {
+    let files: string[] = []
+    try {
+      files = await fs.readdir(folderPath)
+    } catch {
+      return {} as Partial<Project>
+    }
+
     const csproj = files.find((f) => f.endsWith('.csproj'))
     const sln = files.find((f) => f.endsWith('.sln'))
 
@@ -30,28 +36,25 @@ export const CSharpDetector: ProjectDetector = {
     }
 
     if (csproj) {
-      try {
-        const content = await fs.readFile(path.join(folderPath, csproj), 'utf-8')
+      const content = await this.readFile(folderPath, csproj)
+      const isExe = /<OutputType>\s*(Exe|WinExe)\s*<\/OutputType>/i.test(content)
+      const isWeb = content.includes('Microsoft.NET.Sdk.Web')
 
-        const isExe = /<OutputType>\s*(Exe|WinExe)\s*<\/OutputType>/i.test(content)
-        const isWeb = content.includes('Microsoft.NET.Sdk.Web')
-
-        if (isExe || isWeb) {
-          scripts['run'] = 'dotnet run'
-          scripts['watch'] = 'dotnet watch run'
-        }
-      } catch {
-        // ignore read error
+      if (isExe || isWeb) {
+        scripts['run'] = 'dotnet run'
+        scripts['watch'] = 'dotnet watch run'
       }
     }
 
     return {
       type: 'csharp',
-      name: name,
+      name,
       version: '1.0.0',
-      scripts: scripts,
+      scripts,
       runnerCommand: undefined,
       installCommand: 'dotnet restore'
     } as Partial<Project>
   }
 }
+
+export const CSharpDetector = new CSharpDetectorImpl()

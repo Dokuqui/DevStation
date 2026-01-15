@@ -1,11 +1,11 @@
+@use '../../assets/mixins' as *;
+
 .container {
   position: fixed;
   bottom: 24px;
   right: 24px;
   z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  @include flex-col(12px);
   pointer-events: none;
 }
 
@@ -13,17 +13,12 @@
   pointer-events: auto;
   min-width: 300px;
   max-width: 400px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  @include card-base;
   padding: 16px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  @include flex(flex-start, flex-start, 12px);
   animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  border-left-width: 4px;
+  border-left: 4px solid transparent;
 
   &.success {
     border-left-color: var(--accent-success);
@@ -58,15 +53,11 @@
 }
 
 .closeBtn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
+  @include btn-icon;
   padding: 2px;
-
-  &:hover {
-    color: var(--text-main);
-  }
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
 }
 
 @keyframes slideIn {

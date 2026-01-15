@@ -1,65 +1,46 @@
+@use '../../assets/mixins' as *;
+
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  @include card-base;
+  padding: 1.5rem;
+  @include flex-col(1.2rem);
+  height: 100%;
   position: relative;
   overflow: hidden;
-  height: 100%;
+  border: 1px solid var(--border);
 
   &:hover {
     transform: translateY(-4px);
     background: var(--bg-hover);
     border-color: var(--border-focus);
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
   }
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  @include flex(space-between, flex-start, 12px);
 }
 
 .titleRow {
-  display: flex;
-  gap: 12px;
-  overflow: hidden;
-  align-items: center;
+  @include flex(flex-start, center, 14px);
   flex: 1;
+  overflow: hidden;
 }
 
 .iconWrapper {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-sm);
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  @include flex-col(2px);
   overflow: hidden;
-}
-
-.versionBadge {
-  font-size: 0.65rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--bg-app);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  font-weight: 500;
 }
 
 .name {
@@ -67,43 +48,41 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  @include text-truncate;
   letter-spacing: -0.01em;
 }
 
-.path {
-  font-size: 0.75rem;
+.versionBadge {
+  @include badge-base;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  background: var(--bg-input);
+  border-color: var(--border);
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-left: 8px;
+  text-transform: uppercase;
+}
+
+.path {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  @include text-truncate;
   max-width: 100%;
+  opacity: 0.8;
 }
 
 .actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
+  @include flex(flex-end, center, 6px);
 }
 
 .actionBtn {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include btn-icon;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
 
   &:hover {
-    background: var(--bg-hover);
+    border-color: var(--text-secondary);
     color: var(--text-main);
-    border-color: var(--border);
   }
 }
 
@@ -113,16 +92,30 @@
 
 .ideMenu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 6px);
   right: 0;
-  margin-top: 5px;
-  background: var(--bg-sidebar);
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 4px;
-  z-index: 10;
-  min-width: 130px;
-  box-shadow: var(--shadow-md);
+  z-index: 20;
+  min-width: 160px;
+  box-shadow: var(--shadow-card);
+  animation: fadeIn 0.1s ease;
+}
+
+.ideMenuItem {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  @include flex(flex-start, center, 10px);
+
+  &:hover {
+    background: var(--accent-primary);
+    color: white;
+  }
 }
 
 .menuSeparator {
@@ -131,395 +124,211 @@
   margin: 4px 0;
 }
 
-.ideMenuItem {
-  padding: 8px 12px;
+.gitBlock {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
   font-size: 0.8rem;
-  color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 4px;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  transition: all 0.1s;
+  transition: all 0.2s ease;
+  @include flex-col(8px);
+
+  border-left: 3px solid var(--accent-success);
 
   &:hover {
-    background: var(--bg-active);
-    color: #e9d5ff;
+    background: var(--bg-input);
+    border-color: var(--text-muted);
+  }
+
+  &.gitDirty {
+    border-left-color: var(--accent-warning);
   }
 }
 
-.gitBlock {
-  background: var(--bg-app);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-size: 0.75rem;
-  border-left: 3px solid var(--accent-success);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.gitDirty {
-  border-left-color: var(--accent-warning);
-}
-
 .gitHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include flex(space-between, center);
+  width: 100%;
 }
 
 .branch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  @include badge-base;
+  background: transparent;
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0;
+  border: none;
+
+  svg {
+    color: var(--accent-primary);
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .status {
-  display: flex;
-  align-items: center;
+  @include flex(flex-end, center, 0);
 }
 
 .clean {
   color: var(--accent-success);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  @include flex(center, center, 6px);
   font-weight: 600;
+  font-size: 0.75rem;
 }
 
 .dirty {
   color: var(--accent-warning);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  @include flex(center, center, 6px);
   font-weight: 600;
+  font-size: 0.75rem;
 }
 
 .commit {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  @include flex(flex-start, center, 8px);
   color: var(--text-muted);
+  font-size: 0.75rem;
+
+  .commitIcon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+  }
+
   .message {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @include text-truncate;
     font-style: italic;
+    opacity: 0.9;
   }
 }
 
 .sync {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--accent-primary);
-  display: flex;
-  gap: 10px;
+  @include flex(flex-start, center, 12px);
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .scriptsSection {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 0;
+  @include flex-col(10px);
+  min-height: 60px;
 }
 
 .sectionLabel {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .scriptList {
-  display: flex;
+  @include flex(flex-start, center, 8px);
   flex-wrap: wrap;
-  gap: 8px;
-  overflow-y: auto;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--bg-hover);
-    border-radius: 2px;
-  }
 }
 
 .scriptPill {
-  background: var(--bg-app);
+  @include btn-base;
+  padding: 6px 12px;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  min-width: fit-content;
-  user-select: none;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
 
   &:hover {
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
+    color: var(--text-main);
     background: var(--bg-hover);
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
   &.running {
     border-color: var(--accent-danger);
     color: var(--accent-danger);
-    background: var(--danger-bg);
+    background: rgba(239, 68, 68, 0.05);
     padding-right: 4px;
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.15);
-    }
   }
 }
 
 .runContent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  @include flex(center, center, 8px);
 }
 
 .stopBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  color: inherit;
+  @include btn-icon;
   padding: 4px;
-  margin-left: 4px;
+  width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  color: var(--accent-danger);
   border-radius: 4px;
-  cursor: pointer;
-  opacity: 0.7;
-  border-left: 1px solid rgba(239, 68, 68, 0.2);
 
   &:hover {
-    opacity: 1;
-    background: rgba(239, 68, 68, 0.1);
+    background: var(--accent-danger);
+    color: white;
+  }
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  @include flex(space-between, flex-end);
+}
+
+.metaRow {
+  @include flex-col(6px);
+}
+
+.meta {
+  @include flex(flex-start, center, 6px);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.installBtn {
+  @include btn-ghost;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+
+  &:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-main);
+  }
+
+  &.running {
+    color: var(--accent-warning);
+    border-color: var(--accent-warning);
+    background: var(--warning-bg);
+  }
+}
+
+.gitToggle {
+  @include btn-ghost;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+
+  &:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
   }
 }
 
 .spinner {
   animation: spin 1s linear infinite;
 }
-
 .empty {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   font-style: italic;
-  padding: 4px 0;
-}
-
-.footer {
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.metaRow {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.installBtn {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid transparent;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--bg-hover);
-    color: var(--text-main);
-    border-color: var(--border);
-  }
-
-  &.running {
-    color: var(--accent-warning);
-    background: var(--warning-bg);
-    border-color: transparent;
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.gitSection {
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-}
-
-.gitToggle {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: var(--bg-hover);
-    color: var(--accent-primary);
-  }
-}
-
-.gitPanel {
-  margin-top: 10px;
-  background: var(--bg-app); /* Slightly darker/inset look */
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  animation: fadeIn 0.2s ease;
-}
-
-.loader {
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  color: var(--text-muted);
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-.branchRow {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-
-  select {
-    flex: 1;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    padding: 6px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    outline: none;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--text-secondary);
-    }
-  }
-
-  button {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    width: 30px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    &:hover {
-      color: var(--accent-primary);
-      border-color: var(--accent-primary);
-    }
-  }
-}
-
-.syncButtons {
-  display: flex;
-  gap: 8px;
-}
-
-.pullBtn,
-.pushBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.pullBtn {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--accent-success);
-  border-color: rgba(16, 185, 129, 0.2);
-
-  &:hover {
-    background: rgba(16, 185, 129, 0.2);
-  }
-}
-
-.pushBtn {
-  background: rgba(124, 58, 237, 0.1);
-  color: var(--accent-primary);
-  border-color: rgba(124, 58, 237, 0.2);
-
-  &:hover {
-    background: rgba(124, 58, 237, 0.2);
-  }
-}
-
-.noGit {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: 0.85rem;
-  text-align: center;
-  padding: 10px;
-}
-
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
 }

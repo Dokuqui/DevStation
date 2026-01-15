@@ -1,25 +1,17 @@
+@use '../../assets/mixins' as *;
+
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  animation: fadeIn 0.2s ease;
+  @include modal-overlay;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
 }
 
 .modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  @include modal-content(500px);
   padding: 2.5rem;
-  width: 500px;
-  max-width: 90vw;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .iconContainer {
@@ -34,48 +26,40 @@
 .mainIcon {
   color: var(--accent-primary);
   z-index: 2;
-  filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.3));
+  filter: drop-shadow(0 0 15px rgba(124, 58, 237, 0.4));
 }
 
 .pulse {
-  position: absolute;
+  @include absolute-center;
   width: 100%;
   height: 100%;
-  background: var(--accent-bg);
+  background: rgba(124, 58, 237, 0.2);
   border-radius: 50%;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .title {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   margin: 0 0 1.5rem 0;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .logWindow {
   width: 100%;
   height: 220px;
-  background: var(--bg-app);
+  background: var(--bg-input);
   border-radius: var(--radius-sm);
   padding: 1rem;
   overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  @include flex-col(6px);
   border: 1px solid var(--border);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--bg-hover);
-    border-radius: 3px;
-  }
+  // Softer shadow
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  @include scrollbar;
 }
 
 .logLine {
@@ -87,26 +71,24 @@
 
   &:last-child {
     color: var(--text-main);
-    font-weight: 600;
+    font-weight: 700;
 
     .prompt {
       color: var(--accent-primary);
-      text-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+      text-shadow: 0 0 8px var(--shadow-glow);
     }
   }
 }
 
 .prompt {
-  color: var(--text-disabled);
+  color: var(--text-muted);
   user-select: none;
   font-weight: 700;
 }
 
 .footer {
   margin-top: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  @include flex(center, center, 10px);
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 500;
@@ -117,42 +99,21 @@
   animation: spin 1s linear infinite;
 }
 
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+}
 @keyframes spin {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.6);
-    opacity: 0;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

@@ -1,38 +1,28 @@
-import fs from 'fs/promises'
 import path from 'path'
-import { ProjectDetector } from './base'
-import { Project } from '@renderer/types'
+import { BaseDetector } from './base'
+import { Project } from '../../shared/types'
 
-export const NodeDetector: ProjectDetector = {
-  async isMatch(folderPath: string) {
-    const pkgPath = path.join(folderPath, 'package.json')
+class NodeDetectorImpl extends BaseDetector {
+  async isMatch(folderPath: string): Promise<boolean> {
+    return this.fileExists(folderPath, 'package.json')
+  }
+
+  async parse(folderPath: string): Promise<Partial<Project>> {
+    const data = await this.readFile(folderPath, 'package.json')
+    if (!data) return { type: 'node' } as Partial<Project>
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let json: any = {}
     try {
-      const stat = await fs.stat(pkgPath)
-      return stat.isFile()
+      json = JSON.parse(data)
     } catch {
-      return false
+      // Invalid package.json
     }
-  },
-
-  async parse(folderPath: string) {
-    const pkgPath = path.join(folderPath, 'package.json')
-    const data = await fs.readFile(pkgPath, 'utf-8')
-    const json = JSON.parse(data)
 
     let runner = 'npm run'
-    if (
-      await fs.access(path.join(folderPath, 'pnpm-lock.yaml')).then(
-        () => true,
-        () => false
-      )
-    ) {
+    if (await this.fileExists(folderPath, 'pnpm-lock.yaml')) {
       runner = 'pnpm'
-    } else if (
-      await fs.access(path.join(folderPath, 'yarn.lock')).then(
-        () => true,
-        () => false
-      )
-    ) {
+    } else if (await this.fileExists(folderPath, 'yarn.lock')) {
       runner = 'yarn'
     }
 
@@ -43,8 +33,10 @@ export const NodeDetector: ProjectDetector = {
       scripts: json.scripts || {},
       runnerCommand: runner,
       installCommand: runner.replace(' run', '') + ' install',
-      dependencies: json.dependencies || {},
-      devDependencies: json.devDependencies || {}
+      dependencies: Object.keys(json.dependencies || {}).length,
+      devDependencies: Object.keys(json.devDependencies || {}).length
     } as Partial<Project>
   }
 }
+
+export const NodeDetector = new NodeDetectorImpl()

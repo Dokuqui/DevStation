@@ -1,63 +1,45 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { ProjectDetector } from './base'
-import { Project } from '@renderer/types'
+import { BaseDetector } from './base'
+import { Project } from '../../shared/types'
 
 const TARGET_FILES = ['go.mod', 'main.go', 'go.work', 'Makefile']
 
-export const GoDetector: ProjectDetector = {
-  async isMatch(folderPath: string) {
-    for (const file of TARGET_FILES) {
-      try {
-        await fs.access(path.join(folderPath, file))
-        return true
-      } catch {
-        continue
-      }
-    }
+class GoDetectorImpl extends BaseDetector {
+  async isMatch(folderPath: string): Promise<boolean> {
+    if (await this.anyFileExists(folderPath, TARGET_FILES)) return true
+
     try {
       const files = await fs.readdir(folderPath)
       return files.some((f) => f.endsWith('.go'))
     } catch {
       return false
     }
-  },
+  }
 
-  async parse(folderPath: string) {
+  async parse(folderPath: string): Promise<Partial<Project>> {
     const name = path.basename(folderPath)
     const scripts: Record<string, string> = {}
     let version = 'unknown'
     const install = 'go mod download'
 
-    try {
-      const modPath = path.join(folderPath, 'go.mod')
-      const modContent = await fs.readFile(modPath, 'utf-8')
+    const modContent = await this.readFile(folderPath, 'go.mod')
+    if (modContent) {
       const versionMatch = modContent.match(/^go\s+([0-9.]+)/m)
-      if (versionMatch) {
-        version = versionMatch[1]
-      }
-    } catch {
-      // Ignore
+      if (versionMatch) version = versionMatch[1]
     }
 
-    try {
-      await fs.access(path.join(folderPath, 'main.go'))
+    if (await this.fileExists(folderPath, 'main.go')) {
       scripts['run'] = 'go run .'
-    } catch {
-      // Ignore
     }
 
     try {
       const cmdPath = path.join(folderPath, 'cmd')
       const cmdEntries = await fs.readdir(cmdPath, { withFileTypes: true })
-
       for (const entry of cmdEntries) {
         if (entry.isDirectory()) {
-          try {
-            await fs.access(path.join(cmdPath, entry.name, 'main.go'))
+          if (await this.fileExists(cmdPath, path.join(entry.name, 'main.go'))) {
             scripts[`run:${entry.name}`] = `go run ./cmd/${entry.name}`
-          } catch {
-            // No main.go in this subdir
           }
         }
       }
@@ -65,21 +47,16 @@ export const GoDetector: ProjectDetector = {
       // No cmd directory
     }
 
-    try {
-      const makePath = path.join(folderPath, 'Makefile')
-      const makeContent = await fs.readFile(makePath, 'utf-8')
-
+    const makeContent = await this.readFile(folderPath, 'Makefile')
+    if (makeContent) {
       const targetRegex = /^([a-zA-Z0-9_-]+):/gm
       let match
-
       while ((match = targetRegex.exec(makeContent)) !== null) {
         const target = match[1]
         if (target !== '.PHONY' && target !== 'all' && target !== 'help') {
           scripts[target] = `make ${target}`
         }
       }
-    } catch {
-      // No Makefile
     }
 
     if (Object.keys(scripts).length === 0) {
@@ -88,11 +65,13 @@ export const GoDetector: ProjectDetector = {
 
     return {
       type: 'go',
-      name: name,
-      version: version,
-      scripts: scripts,
+      name,
+      version,
+      scripts,
       runnerCommand: undefined,
       installCommand: install
     } as Partial<Project>
   }
 }
+
+export const GoDetector = new GoDetectorImpl()

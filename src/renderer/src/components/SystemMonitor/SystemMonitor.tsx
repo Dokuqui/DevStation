@@ -98,8 +98,15 @@ export function SystemMonitor(): JSX.Element {
       <div className={styles.container}>
         {cards.map((card) => (
           <div key={card.id} className={styles.card} onClick={() => setDetailView(card.detail)}>
-            <div className={styles.iconBox} style={{ background: card.color + '22' }}>
-              <card.icon size={20} color={card.color} />
+            <div
+              className={styles.iconBox}
+              style={{
+                background: card.color + '15',
+                color: card.color,
+                borderColor: card.color + '33'
+              }}
+            >
+              <card.icon size={22} />
             </div>
             <div className={styles.content}>
               <div className={styles.label}>{card.label}</div>
@@ -118,10 +125,26 @@ export function SystemMonitor(): JSX.Element {
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>
-                {detailView === 'cpu' && 'CPU Cores'}
-                {detailView === 'memory' && 'Memory Breakdown'}
-                {detailView === 'disk' && 'Storage Drives'}
-                {detailView === 'network' && 'Network Interfaces'}
+                {detailView === 'cpu' && (
+                  <>
+                    <Cpu className="icon" /> CPU Cores
+                  </>
+                )}
+                {detailView === 'memory' && (
+                  <>
+                    <Activity className="icon" /> Memory Breakdown
+                  </>
+                )}
+                {detailView === 'disk' && (
+                  <>
+                    <HardDrive className="icon" /> Storage Drives
+                  </>
+                )}
+                {detailView === 'network' && (
+                  <>
+                    <Wifi className="icon" /> Network Interfaces
+                  </>
+                )}
               </h2>
               <button onClick={() => setDetailView(null)}>
                 <X size={22} />
@@ -148,27 +171,30 @@ export function SystemMonitor(): JSX.Element {
 
               {detailView === 'memory' && (
                 <div className={styles.memoryGrid}>
-                  <div className={styles.memoryItem}>
-                    <Activity size={20} color="#fab387" />
+                  <div className={styles.memoryItem} style={{ color: '#fab387' }}>
+                    <Activity size={24} />
                     <div>
-                      <div>Active</div>
+                      <div className={styles.label}>Active Usage</div>
                       <div className={styles.bigValue}>{formatBytes(stats.mem.active)}</div>
                     </div>
                   </div>
-                  <div className={styles.memoryItem}>
-                    <Database size={20} color="#89b4fa" />
+                  <div className={styles.memoryItem} style={{ color: '#89b4fa' }}>
+                    <Database size={24} />
                     <div>
-                      <div>Total RAM</div>
+                      <div className={styles.label}>Total Capacity</div>
                       <div className={styles.bigValue}>{formatBytes(stats.mem.total)}</div>
                     </div>
                   </div>
                   {stats.mem.swapTotal > 0 && (
-                    <div className={styles.memoryItem}>
-                      <HardDrive size={20} color="#f38ba8" />
+                    <div className={styles.memoryItem} style={{ color: '#f38ba8' }}>
+                      <HardDrive size={24} />
                       <div>
-                        <div>Swap Used</div>
+                        <div className={styles.label}>Swap Memory</div>
                         <div className={styles.bigValue}>
-                          {formatBytes(stats.mem.swapUsed)} / {formatBytes(stats.mem.swapTotal)}
+                          {formatBytes(stats.mem.swapUsed)}{' '}
+                          <span style={{ fontSize: '1rem', opacity: 0.7 }}>
+                            / {formatBytes(stats.mem.swapTotal)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -179,21 +205,24 @@ export function SystemMonitor(): JSX.Element {
               {detailView === 'disk' && (
                 <div className={styles.diskList}>
                   {stats.disk.all.length === 0 ? (
-                    <p className={styles.noData}>No disks detected</p>
+                    <p style={{ textAlign: 'center', color: '#71717a' }}>No disks detected</p>
                   ) : (
                     stats.disk.all.map((d) => {
                       const isMain = d.mount === stats.disk.main.mount
+                      // Determine color based on usage
+                      const barColor = d.use > 90 ? '#f38ba8' : d.use > 75 ? '#f9e2af' : '#a6e3a1'
+
                       return (
                         <div
                           key={d.mount}
                           className={`${styles.diskItem} ${isMain ? styles.mainDisk : ''}`}
                         >
                           <div className={styles.diskHeader}>
-                            <HardDrive size={20} color="#a6e3a1" />
+                            <HardDrive size={22} color="#a6e3a1" />
                             <div className={styles.diskInfo}>
                               <div className={styles.diskMount}>
                                 {d.mount}
-                                {isMain && <span className={styles.mainBadge}>main</span>}
+                                {isMain && <span className={styles.mainBadge}>System</span>}
                               </div>
                               <div className={styles.diskMeta}>
                                 {d.fs} • {d.type || 'Unknown'}
@@ -207,16 +236,16 @@ export function SystemMonitor(): JSX.Element {
                               className={styles.diskFill}
                               style={{
                                 width: `${d.use}%`,
-                                background: d.use > 90 ? '#f38ba8' : '#a6e3a1'
+                                background: `linear-gradient(90deg, ${barColor}, ${barColor}dd)`
                               }}
                             />
                           </div>
 
                           <div className={styles.diskDetails}>
                             <span>{formatBytes(d.used)} used</span>
-                            <span>•</span>
+                            <span style={{ opacity: 0.3 }}>|</span>
                             <span>{formatBytes(d.size - d.used)} free</span>
-                            <span>•</span>
+                            <span style={{ opacity: 0.3 }}>|</span>
                             <span>{formatBytes(d.size)} total</span>
                           </div>
                         </div>
@@ -231,16 +260,16 @@ export function SystemMonitor(): JSX.Element {
                   {stats.net.interfaces.map((n) => (
                     <div key={n.iface} className={styles.netItem}>
                       <div className={styles.netHeader}>
-                        <Wifi size={18} color="#89b4fa" />
+                        <Wifi size={20} />
                         <span className={styles.netIface}>{n.iface}</span>
                       </div>
                       <div className={styles.netFlow}>
                         <span>
-                          <ArrowDown size={14} color="#a6e3a1" />
+                          <ArrowDown size={16} color="#a6e3a1" />
                           {formatBytes(n.rx_sec)}/s
                         </span>
                         <span>
-                          <ArrowUp size={14} color="#f38ba8" />
+                          <ArrowUp size={16} color="#f38ba8" />
                           {formatBytes(n.tx_sec)}/s
                         </span>
                       </div>

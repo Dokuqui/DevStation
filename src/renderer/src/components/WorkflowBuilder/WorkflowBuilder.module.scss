@@ -1,17 +1,20 @@
+@use '../../assets/mixins' as *;
+@use 'sass:color';
+
 .builderContainer {
-  display: flex;
-  flex-direction: column;
+  @include flex-col(0);
   height: 100%;
   width: 100%;
   background: var(--bg-canvas);
   overflow: hidden;
   position: relative;
+  isolation: isolate;
 }
 
 .wrapper {
-  display: flex;
-  flex-direction: row;
+  @include flex(flex-start, stretch, 0);
   flex: 1;
+  width: 100%;
   height: calc(100% - 60px);
   position: relative;
   overflow: hidden;
@@ -20,8 +23,22 @@
 .canvasWrapper {
   flex: 1;
   height: 100%;
+  width: 100%;
   position: relative;
   background-color: var(--bg-canvas);
+  display: flex;
+  flex-direction: column;
+
+  :global(.react-flow) {
+    flex: 1;
+    height: 100% !important;
+    width: 100% !important;
+  }
+}
+
+:global(.react-flow__edge-path) {
+  stroke: var(--text-muted) !important;
+  stroke-width: 2px !important;
 }
 
 .react-flow__viewport {
@@ -32,34 +49,32 @@
   height: 60px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
+  @include flex(flex-start, center, 1rem);
   padding: 0 1.5rem;
-  gap: 1rem;
   flex-shrink: 0;
-  z-index: 10;
+  z-index: 20;
   box-shadow: var(--shadow-sm);
   color: var(--text-main);
 }
 
 .draggable {
+  @include flex(center, center, 8px);
   background: var(--bg-input);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: grab;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   user-select: none;
   box-shadow: var(--shadow-sm);
 
   svg {
     color: var(--text-muted);
+    width: 16px;
+    height: 16px;
   }
 
   &:hover {
@@ -68,7 +83,6 @@
     color: var(--text-main);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-
     svg {
       color: var(--accent-primary);
     }
@@ -88,64 +102,37 @@
 }
 
 .nameInputWrapper {
-  display: flex;
-  align-items: center;
+  @include flex(flex-start, center, 0);
   position: relative;
 
   .inputIcon {
-    position: absolute;
-    left: 10px;
+    @include absolute-center;
+    left: 16px;
+    transform: translateY(-50%);
     color: var(--text-muted);
     pointer-events: none;
     z-index: 2;
+    width: 16px;
   }
 }
 
 .nameInput {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  padding: 8px 12px 8px 32px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  @include input-base;
+  padding-left: 36px;
+  width: 240px;
   font-weight: 500;
-  min-width: 200px;
-  outline: none;
-  transition: all 0.2s;
-
-  &:focus {
-    border-color: var(--accent-primary);
-    background: var(--bg-card);
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
-  }
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
+  background: var(--bg-input);
 }
 
 .btn {
-  background: var(--accent-primary);
-  color: #ffffff;
-  border: none;
+  @include btn-primary;
   padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-
-  &:hover {
-    background: var(--accent-secondary);
-    transform: translateY(-1px);
-  }
 
   &.success {
     background: var(--accent-success);
+    &:hover {
+      background: color.adjust(#10b981, $lightness: -5%);
+    }
   }
 }
 
@@ -154,21 +141,22 @@
 }
 
 .node {
-  background: var(--bg-node);
+  background-color: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  min-width: 240px;
+  min-width: 260px;
   box-shadow: var(--shadow-card);
   overflow: visible;
-  font-family: 'Inter', sans-serif;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   position: relative;
   color: var(--text-main);
+  z-index: 10;
 
   &:hover {
     border-color: var(--text-secondary);
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
+    z-index: 20;
   }
 
   &.selected {
@@ -180,39 +168,36 @@
     padding: 10px 14px;
     font-size: 0.9rem;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    @include flex(flex-start, center, 10px);
     border-bottom: 1px solid var(--border);
     color: var(--text-main);
-    background: var(--bg-node-header);
-    border-top-left-radius: var(--radius);
-    border-top-right-radius: var(--radius);
+    background: var(--bg-hover);
+    border-radius: var(--radius) var(--radius) 0 0;
   }
 
   .nodeBody {
     padding: 14px;
     font-size: 0.85rem;
     color: var(--text-main);
-    background: var(--bg-node);
-    border-bottom-left-radius: var(--radius);
-    border-bottom-right-radius: var(--radius);
+    background: var(--bg-card);
+    border-radius: 0 0 var(--radius) var(--radius);
 
     small {
       display: block;
       color: var(--text-secondary);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      font-size: 0.75rem;
     }
 
     code {
       display: block;
-      background: var(--bg-app);
-      padding: 6px 8px;
+      background: var(--bg-input);
+      padding: 8px;
       border-radius: 4px;
-      margin-top: 6px;
+      margin-top: 8px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
-      color: var(--text-main);
+      color: var(--text-secondary);
       border: 1px solid var(--border);
       word-break: break-all;
     }
@@ -220,7 +205,7 @@
 
   &.trigger {
     .nodeHeader {
-      border-left: 3px solid var(--accent-success);
+      border-left: 4px solid var(--accent-success);
     }
     svg {
       color: var(--accent-success);
@@ -229,7 +214,7 @@
 
   &.action {
     .nodeHeader {
-      border-left: 3px solid var(--accent-primary);
+      border-left: 4px solid var(--accent-primary);
     }
     svg {
       color: var(--accent-primary);
@@ -238,7 +223,7 @@
 
   &.condition {
     .nodeHeader {
-      border-left: 3px solid var(--accent-warning);
+      border-left: 4px solid var(--accent-warning);
     }
     svg {
       color: var(--accent-warning);
@@ -247,59 +232,53 @@
 }
 
 .handle {
-  width: 12px !important;
-  height: 12px !important;
-  background: var(--bg-card);
-  border: 2px solid var(--text-secondary);
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   z-index: 100;
 
   transform: translate(-50%, -50%);
   transform-origin: center center;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  transition: all 0.2s;
+  background: var(--bg-card);
+  border: 2px solid var(--text-secondary);
 
   &:hover {
-    background: var(--accent-primary);
+    transform: translate(-50%, -50%) scale(1.4);
     border-color: var(--accent-primary);
-    transform: translate(-50%, -50%) scale(1.3);
+    background: var(--accent-primary);
   }
 }
 
 .logicHandle {
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 50%;
-  border: 3px solid var(--bg-card);
-
-  transform: translate(-50%, -50%);
-  transform-origin: center center;
-
-  z-index: 100;
-  cursor: pointer;
-  transition: all 0.2s;
+  @extend .handle;
+  width: 14px;
+  height: 14px;
+  border-width: 3px;
 
   &:hover {
-    transform: translate(-50%, -50%) scale(1.3);
+    transform: translate(-50%, -50%) scale(1.4);
+    background-color: inherit;
+    border-color: inherit;
   }
 }
 
 .propertiesPanel {
   width: 320px;
+  height: 100%;
   background: var(--bg-sidebar);
   border-left: 1px solid var(--border);
   padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  @include flex-col(1.5rem);
   overflow-y: auto;
   box-shadow: var(--shadow-card);
+  z-index: 30;
+  flex-shrink: 0;
 }
 
 .panelHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include flex(space-between, center);
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
 
@@ -311,26 +290,15 @@
   }
 
   button {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    padding: 6px;
-    border-radius: 4px;
-    cursor: pointer;
-    &:hover {
-      background: var(--bg-hover);
-      color: var(--text-main);
-    }
+    @include btn-icon;
   }
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  @include flex-col(8px);
 
   label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 700;
     text-transform: uppercase;
@@ -340,37 +308,16 @@
   input,
   select,
   textarea {
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 0.9rem;
-    outline: none;
-    transition: all 0.2s;
+    @include input-base;
     width: 100%;
-
-    &:hover {
-      border-color: var(--text-secondary);
-    }
-
-    &:focus {
-      border-color: var(--accent-primary);
-      background: var(--bg-app);
-      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
-    }
-
-    &::placeholder {
-      color: var(--text-muted);
-    }
   }
 
   textarea {
-    min-height: 80px;
+    min-height: 100px;
     resize: vertical;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
+    line-height: 1.4;
   }
 }
 
@@ -379,33 +326,32 @@
   text-align: center;
   margin-top: 50%;
   font-style: italic;
+  padding: 0 1rem;
 }
 
 .controls {
   background-color: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 4px;
   box-shadow: var(--shadow-md);
+  margin-bottom: 1rem;
+  margin-left: 1rem;
 
   :global(.react-flow__controls-button) {
     background: transparent;
     border: none;
     border-bottom: 1px solid var(--border);
     border-radius: 0;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
+    width: 32px;
+    height: 32px;
+    @include flex(center, center);
     color: var(--text-main);
     fill: var(--text-main);
 
     svg {
-      fill: currentColor;
-      max-width: 18px;
-      max-height: 18px;
+      max-width: 16px;
+      max-height: 16px;
     }
 
     &:last-child {

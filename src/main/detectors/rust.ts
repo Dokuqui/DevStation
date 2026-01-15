@@ -1,26 +1,14 @@
-import fs from 'fs/promises'
 import path from 'path'
-import { ProjectDetector } from './base'
+import { BaseDetector } from './base'
 import { Project } from '../../shared/types'
 
-export const RustDetector: ProjectDetector = {
-  async isMatch(folderPath: string) {
-    try {
-      await fs.access(path.join(folderPath, 'Cargo.toml'))
-      return true
-    } catch {
-      return false
-    }
-  },
+class RustDetectorImpl extends BaseDetector {
+  async isMatch(folderPath: string): Promise<boolean> {
+    return this.fileExists(folderPath, 'Cargo.toml')
+  }
 
-  async parse(folderPath: string) {
-    const cargoPath = path.join(folderPath, 'Cargo.toml')
-    let content = ''
-    try {
-      content = await fs.readFile(cargoPath, 'utf-8')
-    } catch {
-      // ignore
-    }
+  async parse(folderPath: string): Promise<Partial<Project>> {
+    const content = await this.readFile(folderPath, 'Cargo.toml')
 
     const nameMatch = content.match(/^name\s*=\s*"([^"]+)"/m)
     const versionMatch = content.match(/^version\s*=\s*"([^"]+)"/m)
@@ -39,11 +27,8 @@ export const RustDetector: ProjectDetector = {
     let isRunnable = content.includes('[[bin]]')
 
     if (!isRunnable) {
-      try {
-        await fs.access(path.join(folderPath, 'src', 'main.rs'))
+      if (await this.fileExists(folderPath, path.join('src', 'main.rs'))) {
         isRunnable = true
-      } catch {
-        // Likely a library (src/lib.rs)
       }
     }
 
@@ -59,11 +44,13 @@ export const RustDetector: ProjectDetector = {
 
     return {
       type: 'rust',
-      name: name,
-      version: version,
-      scripts: scripts,
+      name,
+      version,
+      scripts,
       runnerCommand: undefined,
       installCommand: 'cargo build'
     } as Partial<Project>
   }
 }
+
+export const RustDetector = new RustDetectorImpl()

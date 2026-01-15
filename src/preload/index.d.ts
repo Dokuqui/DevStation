@@ -91,6 +91,10 @@ declare global {
 
       gitCheckout: (path: string, branch: string) => Promise<void>
 
+      gitCommit: (path: string, message: string) => Promise<void>
+
+      gitStash: (path: string) => Promise<void>
+
       githubLogin: () => Promise<boolean>
 
       githubLogout: () => Promise<boolean>

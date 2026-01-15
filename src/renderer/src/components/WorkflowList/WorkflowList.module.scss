@@ -1,3 +1,5 @@
+@use '../../assets/mixins' as *;
+
 .container {
   padding: 2rem;
   height: 100%;
@@ -6,143 +8,112 @@
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
+  @include flex(space-between, center);
   margin-bottom: 2rem;
 }
 
 .createBtn {
-  background: var(--accent-primary);
-  color: #fff;
-  border: none;
+  @include btn-primary;
   padding: 10px 20px;
+  font-size: 0.95rem;
   border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   &:hover {
-    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.6);
+    filter: brightness(1.1);
   }
 }
 
 .stopBtn {
-  background: rgba(243, 139, 168, 0.1);
-  color: var(--accent-danger);
-  border: 1px solid var(--accent-danger);
+  @include btn-base;
   padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
   border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: transparent;
+  color: var(--accent-danger);
+  border: 2px solid var(--accent-danger);
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.1);
 
   &:hover {
-    background: rgba(243, 139, 168, 0.2);
+    background: var(--accent-danger);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
   }
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  @include card-base;
   padding: 1.5rem;
+  @include flex-col(1rem);
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  box-shadow: var(--shadow-sm);
+  position: relative;
 
   &:hover {
     border-color: var(--accent-primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
   }
 }
 
 .cardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include flex(space-between, center);
 
   h3 {
     margin: 0;
     font-size: 1.1rem;
+    font-weight: 700;
     color: var(--text-main);
   }
 }
 
 .status {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: var(--bg-active);
-  color: var(--text-secondary);
-  border: 1px solid transparent;
-  cursor: pointer;
+  @include badge-base;
+  background: var(--bg-hover);
+  color: var(--text-muted);
   transition: all 0.2s;
 
   &:hover {
-    border-color: var(--text-muted);
+    color: var(--text-main);
   }
 
   &.active {
-    background: rgba(166, 227, 161, 0.2);
+    background: rgba(16, 185, 129, 0.15);
     color: var(--accent-success);
-    border-color: rgba(166, 227, 161, 0.3);
-
-    &:hover {
-      background: rgba(166, 227, 161, 0.3);
-    }
+    border-color: rgba(16, 185, 129, 0.2);
   }
 }
 
 .cardInfo {
+  @include flex(flex-start, center, 1rem);
   font-size: 0.85rem;
   color: var(--text-muted);
-  display: flex;
-  gap: 1rem;
 }
 
 .actions {
   margin-top: auto;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  @include flex(flex-end, center, 4px);
 }
 
 .iconBtn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
+  @include btn-icon;
   padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: var(--bg-hover);
-    color: var(--text-main);
-  }
 }
 
 .empty {
   text-align: center;
   color: var(--text-muted);
   margin-top: 4rem;
-  width: 100%;
   grid-column: 1 / -1;
+  font-size: 1rem;
+  font-style: italic;
 }

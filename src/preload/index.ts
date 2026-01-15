@@ -124,6 +124,10 @@ const api = {
   gitCheckout: (path: string, branch: string) =>
     ipcRenderer.invoke('git:checkout', { path, branch }),
 
+  gitCommit: (path: string, message: string) => ipcRenderer.invoke('git:commit', { path, message }),
+
+  gitStash: (path: string) => ipcRenderer.invoke('git:stash', path),
+
   githubLogin: () => ipcRenderer.invoke('github:login'),
 
   githubLogout: () => ipcRenderer.invoke('github:logout'),

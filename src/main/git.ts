@@ -94,3 +94,24 @@ export const gitFetch = async (path: string): Promise<FetchResult> => {
   const git = getGit(path)
   return await git.fetch()
 }
+
+export const gitCommit = async (path: string, message: string): Promise<void> => {
+  const git = getGit(path)
+  try {
+    await git.add('.')
+    await git.commit(message)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    throw new Error(`Commit failed: ${err.message}`)
+  }
+}
+
+export const gitStash = async (path: string): Promise<void> => {
+  const git = getGit(path)
+  try {
+    await git.stash()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    throw new Error(`Stash failed: ${err.message}`)
+  }
+}

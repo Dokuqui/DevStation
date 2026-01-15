@@ -6,25 +6,9 @@ import fs from 'fs/promises'
 import path from 'path'
 import { dialog } from 'electron'
 import { IDE } from '@renderer/types'
+import { getStore } from './store'
 
 const execAsync = promisify(exec)
-
-interface IDEStore {
-  customIDE: {
-    name: string
-    path: string
-  } | null
-}
-
-let store: any = null
-async function getStore(): Promise<any> {
-  if (store) return store
-  const { default: Store } = await import('electron-store')
-  store = new Store<IDEStore>({
-    defaults: { customIDE: null }
-  })
-  return store
-}
 
 interface IDEConfig {
   id: IDE

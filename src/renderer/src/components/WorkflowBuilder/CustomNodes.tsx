@@ -17,7 +17,7 @@ export function TriggerNode({ data }: NodeProps): JSX.Element {
         type="source"
         position={Position.Bottom}
         className={styles.handle}
-        style={{ bottom: -15 }}
+        style={{ bottom: -12 }}
       />
     </div>
   )
@@ -70,7 +70,7 @@ export function ActionNode({ data }: NodeProps): JSX.Element {
         type="source"
         position={Position.Bottom}
         className={styles.handle}
-        style={{ bottom: -15 }}
+        style={{ bottom: -12 }}
       />
     </div>
   )

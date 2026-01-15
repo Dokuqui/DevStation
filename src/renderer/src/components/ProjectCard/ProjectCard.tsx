@@ -71,6 +71,19 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
   const [isGitModalOpen, setIsGitModalOpen] = useState(false)
 
+  // FIX: Ensure we have a valid initial state and handle updates robustly
+  const [gitState, setGitState] = useState(project.git)
+  const [prevGitProp, setPrevGitProp] = useState(project.git)
+
+  // Derived state pattern: Sync state when props change from parent (e.g. rescan)
+  if (project.git !== prevGitProp) {
+    setPrevGitProp(project.git)
+    // Only update if prop is valid, otherwise keep local state (prevents flashing)
+    if (project.git) {
+      setGitState(project.git)
+    }
+  }
+
   useEffect(() => {
     const currentListeners = listenersRef.current
     return () => {
@@ -247,21 +260,25 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
           </div>
         </div>
 
-        {project.git && (
-          <div className={`${styles.gitBlock} ${!project.git.isClean ? styles.gitDirty : ''}`}>
+        {gitState && (
+          <div
+            className={`${styles.gitBlock} ${!gitState.isClean ? styles.gitDirty : ''}`}
+            onClick={() => setIsGitModalOpen(true)}
+          >
             <div className={styles.gitHeader}>
               <div className={styles.branch}>
                 <GitBranch size={12} />
-                {project.git.branch}
+                {/* FIX: Ensure fallback if branch is missing */}
+                {gitState.branch || 'HEAD'}
               </div>
               <div className={styles.status}>
-                {project.git.isClean ? (
+                {gitState.isClean ? (
                   <span className={styles.clean}>
                     <CheckCircle2 size={12} /> Clean
                   </span>
                 ) : (
                   <span className={styles.dirty}>
-                    <CircleAlert size={12} /> {project.git.filesChanged} changed
+                    <CircleAlert size={12} /> {gitState.filesChanged} changed
                   </span>
                 )}
               </div>
@@ -269,15 +286,13 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
             <div className={styles.commit}>
               <GitCommit size={12} className={styles.commitIcon} />
-              <span className={styles.message}>
-                {project.git.lastCommitMessage || 'No commits'}
-              </span>
+              <span className={styles.message}>{gitState.lastCommitMessage || 'No commits'}</span>
             </div>
 
-            {(project.git.ahead > 0 || project.git.behind > 0) && (
+            {(gitState.ahead > 0 || gitState.behind > 0) && (
               <div className={styles.sync}>
-                {project.git.ahead > 0 && <span>↑ {project.git.ahead}</span>}
-                {project.git.behind > 0 && <span>↓ {project.git.behind}</span>}
+                {gitState.ahead > 0 && <span>↑ {gitState.ahead}</span>}
+                {gitState.behind > 0 && <span>↓ {gitState.behind}</span>}
               </div>
             )}
           </div>
@@ -361,7 +376,8 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
                   <Loader2 size={14} className={styles.spinner} />
                   <span>Install Deps</span>
                   <div
-                    className={styles.miniStop}
+                    className={styles.stopBtn}
+                    style={{ marginLeft: 6 }}
                     onClick={(e) => handleStopScript('install', e)}
                     title="Stop Installation"
                   >
@@ -376,23 +392,27 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
               )}
             </button>
 
-            {project.git && (
+            {/* Git toggle button */}
+            {gitState && (
               <button
                 className={styles.gitToggle}
                 onClick={() => setIsGitModalOpen(true)}
                 title="Manage Git"
               >
                 <GitBranch size={14} />
-                {project.git.branch}
+                {gitState.branch || 'HEAD'}
               </button>
             )}
           </div>
         </div>
       </div>
+
       <GitOpsModal
         isOpen={isGitModalOpen}
         onClose={() => setIsGitModalOpen(false)}
         project={project}
+        // FIX: Ensure we update state even if data looks partial
+        onStatusChange={(newGit) => setGitState((prev) => ({ ...prev, ...newGit }))}
       />
     </>
   )

@@ -1,18 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrowserWindow } from 'electron'
 import { getActiveTerminalIds } from './terminal'
 import path from 'path'
-
-interface TimeStore {
-  projectTimes: Record<string, number>
-}
+import { getStore } from './store'
 
 interface TrackedProject {
   id: string
   name: string
 }
 
-let store: any = null
 let knownProjects: TrackedProject[] = []
 const externalProcesses = new Map<number, string>()
 
@@ -22,17 +17,6 @@ export function updateKnownProjects(projects: TrackedProject[]): void {
 
 export function registerExternalProcess(pid: number, projectId: string): void {
   externalProcesses.set(pid, projectId)
-}
-
-async function getStore(): Promise<any> {
-  if (store) return store
-  const { default: Store } = await import('electron-store')
-  store = new Store<TimeStore>({
-    defaults: {
-      projectTimes: {}
-    }
-  })
-  return store
 }
 
 let interval: NodeJS.Timeout | null = null

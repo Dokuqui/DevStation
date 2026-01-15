@@ -1,0 +1,207 @@
+// --- LAYOUTS ---
+@mixin flex($justify: flex-start, $align: center, $gap: 0) {
+  display: flex;
+  justify-content: $justify;
+  align-items: $align;
+  gap: $gap;
+}
+
+@mixin flex-col($gap: 0) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@mixin text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// --- VISUALS ---
+@mixin scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--bg-active);
+    border-radius: 4px;
+    &:hover {
+      background: var(--text-muted);
+    }
+  }
+}
+
+@mixin card-base {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@mixin badge-base {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// --- INTERACTIVE ELEMENTS ---
+
+@mixin btn-base {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.15s ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  user-select: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+@mixin btn-primary {
+  @include btn-base;
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    background: var(--accent-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+}
+
+@mixin btn-ghost {
+  @include btn-base;
+  background: transparent;
+  color: var(--text-muted);
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+  }
+
+  &:active {
+    background: var(--bg-active);
+  }
+}
+
+@mixin btn-icon {
+  @include btn-base;
+  padding: 6px;
+  color: var(--text-muted);
+  background: transparent;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+  }
+}
+
+@mixin input-base {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+
+  &:hover {
+    border-color: var(--border-focus);
+  }
+
+  &:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--shadow-glow);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+}
+
+@mixin modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  @include flex(center, center);
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@mixin modal-content($width: 500px) {
+  width: min(90vw, $width);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// --- ANIMATIONS ---
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

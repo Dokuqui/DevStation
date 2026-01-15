@@ -1,84 +1,49 @@
+@use '../../assets/mixins' as *;
+
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  animation: fadeIn 0.2s ease-out;
+  @include modal-overlay;
 }
 
 .modal {
-  width: min(90vw, 1000px);
+  @include modal-content(1000px);
   height: 80vh;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header {
+  @include flex(space-between, center);
   padding: 1rem 1.5rem;
   background: var(--bg-sidebar);
   border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   flex-shrink: 0;
 
   h2 {
     margin: 0;
     font-size: 1.1rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    font-weight: 700;
+    @include flex(flex-start, center, 12px);
     color: var(--text-main);
   }
 }
 
 .closeBtn {
-  background: rgba(239, 68, 68, 0.1);
+  @include btn-ghost;
   color: var(--accent-danger);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 6px 12px;
 
   &:hover {
     background: var(--accent-danger);
-    border-color: var(--accent-danger);
     color: white;
-    transform: translateY(-1px);
+    border-color: var(--accent-danger);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    background: var(--bg-hover);
-    border-color: transparent;
-    color: var(--text-disabled);
   }
 }
 
 .terminalContainer {
   flex: 1;
-  padding: 1rem;
+  padding: 0;
   background: #09090b;
-  display: flex;
-  flex-direction: column;
+  @include flex-col(0);
+  overflow: hidden;
 }
