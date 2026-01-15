@@ -124,3 +124,20 @@ export interface Workflow {
   edges: WorkflowEdge[]
   active: boolean
 }
+
+export type SnippetType = 'code' | 'note'
+
+export interface Snippet {
+  id: string
+  title: string
+  content: string
+  type: SnippetType
+  folderId?: string | null
+  linkedProjectIds?: string[]
+  linkedWorkflowIds?: string[]
+  language: string
+  tags: string[]
+  createdAt: number
+  updatedAt: number
+  favorite: boolean
+}

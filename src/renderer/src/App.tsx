@@ -1,6 +1,7 @@
 import { JSX, useState, useEffect } from 'react'
 import styles from './App.module.scss'
 import {
+  BookMarked,
   ChevronLeft,
   Cpu,
   Download,
@@ -26,8 +27,9 @@ import { ToastContainer } from './components/Toast/ToastContainer'
 import { useToastStore } from './store/useToastStore'
 import { CloneModal } from './components/CloneModal/CloneModal'
 import { Settings } from './components/Settings/Settings'
+import { SnippetManager } from './components/SnippetManager/SnippetManager'
 
-type View = 'projects' | 'system' | 'workflows' | 'settings'
+type View = 'projects' | 'system' | 'workflows' | 'snippets' | 'settings'
 
 function App(): JSX.Element {
   const loadWorkflows = useWorkflowStore((state) => state.loadWorkflows)
@@ -190,6 +192,14 @@ function App(): JSX.Element {
             </button>
 
             <button
+              className={`${styles.navItem} ${currentView === 'snippets' ? styles.active : ''}`}
+              onClick={() => setCurrentView('snippets')}
+            >
+              <BookMarked size={18} />
+              <span>Knowledge</span>
+            </button>
+
+            <button
               className={`${styles.navItem} ${currentView === 'settings' ? styles.active : ''}`}
               onClick={() => setCurrentView('settings')}
             >
@@ -299,6 +309,8 @@ function App(): JSX.Element {
               )}
             </div>
           )}
+
+          {currentView === 'snippets' && <SnippetManager projects={projects} />}
 
           {currentView === 'settings' && <Settings />}
         </main>
