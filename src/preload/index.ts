@@ -130,7 +130,12 @@ const api = {
 
   githubRepos: () => ipcRenderer.invoke('github:repos'),
 
-  githubStatus: () => ipcRenderer.invoke('github:status')
+  githubStatus: () => ipcRenderer.invoke('github:status'),
+
+  getSettings: (key?: string) => ipcRenderer.invoke('settings:get', key),
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setSetting: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value)
 }
 
 if (process.contextIsolated) {

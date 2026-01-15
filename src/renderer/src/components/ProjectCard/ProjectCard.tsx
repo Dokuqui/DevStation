@@ -147,9 +147,17 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
     await window.api.killTerminal(termId)
   }
 
-  const handleIdeClick = (e: React.MouseEvent): void => {
+  const handleIdeClick = async (e: React.MouseEvent): Promise<void> => {
     e.stopPropagation()
-    setShowIdeMenu((prev) => !prev)
+
+    const settings = await window.api.getSettings()
+    const defaultEditor = settings?.defaultEditor
+
+    if (defaultEditor && defaultEditor !== 'ask') {
+      window.api.openProjectInIDE(defaultEditor, project.path)
+    } else {
+      setShowIdeMenu((prev) => !prev)
+    }
   }
 
   const handleAddCustomIDE = async (e: React.MouseEvent): Promise<void> => {

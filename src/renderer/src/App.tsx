@@ -7,6 +7,7 @@ import {
   FolderSearch,
   LayoutGrid,
   Moon,
+  SettingsIcon,
   Sun,
   Terminal,
   Workflow
@@ -24,6 +25,7 @@ import { WorkflowList } from './components/WorkflowList/WorkflowList'
 import { ToastContainer } from './components/Toast/ToastContainer'
 import { useToastStore } from './store/useToastStore'
 import { CloneModal } from './components/CloneModal/CloneModal'
+import { Settings } from './components/Settings/Settings'
 
 type View = 'projects' | 'system' | 'workflows' | 'settings'
 
@@ -186,6 +188,14 @@ function App(): JSX.Element {
               <Workflow size={18} />
               <span>Workflows</span>
             </button>
+
+            <button
+              className={`${styles.navItem} ${currentView === 'settings' ? styles.active : ''}`}
+              onClick={() => setCurrentView('settings')}
+            >
+              <SettingsIcon size={18} />
+              <span>Settings</span>
+            </button>
           </div>
 
           <div className={styles.spacer} />
@@ -289,6 +299,8 @@ function App(): JSX.Element {
               )}
             </div>
           )}
+
+          {currentView === 'settings' && <Settings />}
         </main>
 
         {isPaletteOpen && (

@@ -99,6 +99,12 @@ declare global {
       githubRepos: () => Promise<any[]>
 
       githubStatus: () => Promise<boolean>
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getSettings: (key?: string) => Promise<any>
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setSetting: (key: string, value: any) => Promise<boolean>
     }
   }
 }

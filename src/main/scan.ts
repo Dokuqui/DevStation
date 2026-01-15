@@ -10,6 +10,7 @@ import { RustDetector } from './detectors/rust'
 import { GoDetector } from './detectors/go'
 import { GitInfo, Project, ProjectType } from '@renderer/types'
 import { CSharpDetector } from './detectors/csharp'
+import { getStore } from './store'
 
 const DETECTORS = [NodeDetector, PythonDetector, RustDetector, GoDetector, CSharpDetector] as const
 
@@ -76,6 +77,28 @@ export async function scanProjects(
   onLog?: (message: string) => void
 ): Promise<Project[]> {
   const projects = new Map<string, Project>()
+
+  const store = await getStore()
+  const settings = store.get('settings')
+
+  const baseIgnored = [
+    'node_modules',
+    'dist',
+    'build',
+    'target',
+    'vendor',
+    'venv',
+    '__pycache__',
+    '.git',
+    '.idea',
+    '.vscode'
+  ]
+
+  const userIgnored = settings?.ignoredFolders
+    ? settings.ignoredFolders.split(',').map((s: string) => s.trim())
+    : []
+
+  const ignoredSet = new Set([...baseIgnored, ...userIgnored])
 
   async function scanDir(dirPath: string, depth = 0): Promise<void> {
     if (depth > 4) return
@@ -162,7 +185,8 @@ export async function scanProjects(
         !entry.name.startsWith('.') &&
         !['node_modules', 'dist', 'build', 'target', 'vendor', 'venv', '__pycache__'].includes(
           entry.name
-        )
+        ) &&
+        !ignoredSet.has(entry.name)
     )
 
     await Promise.all(subDirs.map((entry) => scanDir(path.join(dirPath, entry.name), depth + 1)))

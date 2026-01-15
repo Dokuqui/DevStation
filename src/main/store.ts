@@ -8,6 +8,7 @@ interface StoreSchema {
     theme: string
     terminalShell: string
     confirmKill: boolean
+    terminalFontSize?: number
   }
   github_token?: string
 }
@@ -26,6 +27,7 @@ export const getStore = async (): Promise<any> => {
         defaultPath: app.getPath('home'),
         theme: 'dark',
         terminalShell: process.platform === 'win32' ? 'powershell.exe' : '/bin/zsh',
+        terminalFontSize: 14,
         confirmKill: true
       }
     }

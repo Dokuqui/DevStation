@@ -2,6 +2,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { spawn } from 'child_process'
 import treeKill from 'tree-kill'
+import { getStore } from './store'
 
 interface TerminalSession {
   pid: number
@@ -32,6 +33,10 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
         }
 
         try {
+          const store = await getStore()
+          const settings = store.get('settings')
+          const shell = settings?.terminalShell || true
+
           console.log(`[Terminal] Launching: ${command}`)
 
           const env = {
@@ -42,7 +47,7 @@ export function setupTerminalHandlers(mainWindow: BrowserWindow): void {
 
           const child = spawn(command, [], {
             cwd,
-            shell: true,
+            shell: shell,
             detached: false,
             stdio: ['ignore', 'pipe', 'pipe'],
             env
