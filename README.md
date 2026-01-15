@@ -2,9 +2,11 @@
 
 **DevStation** is an all-in-one local development dashboard designed to consolidate your entire workflow. It combines project management, git operations, system monitoring, and a powerful visual automation engine into a single, native desktop application.
 
-![DevStation App](resources/image.png)
+![DevStation App](resources/devstation.png)
 
 ## ✨ Key Features
+
+![DevStation ScreenShot](resources/image.png)
 
 ### 🖥️ Project Dashboard
 
@@ -16,9 +18,11 @@
 
 ### 🐙 Integrated Git Manager
 
+- **Full Lifecycle Management:** Not just status checks—perform **Commits** and **Stashes** directly from the dashboard.
+- **Branch Switching:** Seamlessly switch branches via a dedicated modal with built-in safety checks for uncommitted changes.
+- **Visual Status:** See file changes, ahead/behind commit counts, and current branch status updated in real-time.
 - **Smart Clone:** Clone repositories via URL or **login with GitHub** to browse and clone your private repos directly.
-- **Visual Status:** See file changes, ahead/behind commit counts, and current branch on every project card.
-- **Quick Actions:** Pull, Push, Fetch, and Checkout branches without opening a separate Git client.
+- **Quick Actions:** Pull, Push, and Fetch without opening a separate terminal.
 
 ### ⚙️ Granular Settings
 
