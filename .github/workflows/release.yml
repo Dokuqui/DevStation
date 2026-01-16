@@ -17,6 +17,13 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
+    env:
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      MAIN_VITE_GITHUB_CLIENT_ID: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_ID }}
+      MAIN_VITE_GITHUB_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_SECRET }}
+      MAIN_VITE_GITHUB_REDIRECT_URI: ${{ secrets.MAIN_VITE_GITHUB_REDIRECT_URI }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Check out git repository
         uses: actions/checkout@v4
@@ -36,30 +43,19 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Renderer & Main
-        env:
-          MAIN_VITE_GITHUB_CLIENT_ID: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_ID }}
-          MAIN_VITE_GITHUB_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_SECRET }}
-          MAIN_VITE_GITHUB_REDIRECT_URI: ${{ secrets.MAIN_VITE_GITHUB_REDIRECT_URI }}
-          NODE_OPTIONS: "--max-old-space-size=4096"
-        run: npm run build
+      - name: Run Typecheck
+        run: npm run typecheck
 
       - name: Package Electron App (Windows)
         if: runner.os == 'Windows'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:win -- --publish always
 
       - name: Package Electron App (macOS)
         if: runner.os == 'macOS'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:mac -- --publish always
 
       - name: Package Electron App (Linux)
         if: runner.os == 'Linux'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:linux -- --publish always
 
   release:
