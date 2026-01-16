@@ -476,7 +476,6 @@ export function SnippetManager({ projects = [] }: Props): JSX.Element {
           {folders.map((folder) => (
             <div key={folder.id} className={styles.folderSection}>
               {renamingFolderId === folder.id ? (
-                // EDIT MODE
                 <div className={styles.folderInputRow}>
                   <FolderOpen size={16} color="var(--accent-primary)" />
                   <input

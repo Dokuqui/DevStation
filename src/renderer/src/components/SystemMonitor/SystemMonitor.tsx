@@ -209,7 +209,6 @@ export function SystemMonitor(): JSX.Element {
                   ) : (
                     stats.disk.all.map((d) => {
                       const isMain = d.mount === stats.disk.main.mount
-                      // Determine color based on usage
                       const barColor = d.use > 90 ? '#f38ba8' : d.use > 75 ? '#f9e2af' : '#a6e3a1'
 
                       return (

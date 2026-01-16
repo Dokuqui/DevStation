@@ -12,7 +12,7 @@ import '@xyflow/react/dist/style.css'
 import styles from './WorkflowBuilder.module.scss'
 import { useWorkflowStore } from '../../store/useWorkflowStore'
 import { nodeTypes } from './nodeTypes'
-import { Plus, Save, CheckCircle, Edit3, Split } from 'lucide-react'
+import { Plus, Save, CheckCircle, Edit3, Split, FileCode } from 'lucide-react'
 import { PropertiesPanel } from './PropertiesPanel'
 
 function WorkflowCanvas(): JSX.Element {
@@ -84,6 +84,8 @@ function WorkflowCanvas(): JSX.Element {
         initialData = { label: 'New Action', type: 'shell' }
       } else if (type === 'condition') {
         initialData = { label: 'Check Output', type: 'condition', operator: 'contains' }
+      } else if (type === 'snippet') {
+        initialData = { label: 'Run Snippet', type: 'snippet', snippetId: '' }
       }
 
       const newNode = {
@@ -120,6 +122,15 @@ function WorkflowCanvas(): JSX.Element {
           onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'action')}
         >
           <Plus size={14} /> Action
+        </div>
+
+        <div
+          className={styles.draggable}
+          draggable
+          onDragStart={(e) => e.dataTransfer.setData('application/reactflow', 'snippet')}
+          style={{ borderColor: '#8b5cf6', color: '#8b5cf6' }}
+        >
+          <FileCode size={14} /> Snippet
         </div>
 
         <div

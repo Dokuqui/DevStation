@@ -2,7 +2,8 @@ import { JSX, useState } from 'react'
 import { useOnSelectionChange } from '@xyflow/react'
 import { useWorkflowStore } from '../../store/useWorkflowStore'
 import styles from './WorkflowBuilder.module.scss'
-import { X } from 'lucide-react'
+import { ArrowDownToLine, Play, Save, X } from 'lucide-react'
+import { useSnippetStore } from '@renderer/store/useSnippetStore'
 
 const TRIGGER_TYPES = [
   { value: 'file-change', label: 'On File Change' },
@@ -26,6 +27,7 @@ export function PropertiesPanel(): JSX.Element {
   const nodes = useWorkflowStore((state) => state.nodes)
   const updateNodeData = useWorkflowStore((state) => state.updateNodeData)
   const selectedNode = nodes.find((n) => n.id === selectedNodeId)
+  const snippets = useSnippetStore((state) => state.snippets)
 
   useOnSelectionChange({
     onChange: ({ nodes }) => setSelectedNodeId(nodes[0]?.id || null)
@@ -41,6 +43,8 @@ export function PropertiesPanel(): JSX.Element {
 
   const isTrigger = selectedNode.type === 'trigger'
   const isCondition = selectedNode.type === 'condition'
+  const isSnippet = selectedNode.type === 'snippet'
+
   const data = selectedNode.data
 
   return (
@@ -61,7 +65,7 @@ export function PropertiesPanel(): JSX.Element {
         />
       </div>
 
-      {!isCondition && (
+      {!isCondition && !isSnippet && (
         <div className={styles.formGroup}>
           <label>Type</label>
           <select
@@ -75,6 +79,122 @@ export function PropertiesPanel(): JSX.Element {
             ))}
           </select>
         </div>
+      )}
+
+      {isSnippet && (
+        <>
+          <div className={styles.formGroup}>
+            <label>Action Mode</label>
+            <div className={styles.radioGroup}>
+              <button
+                className={`${data.mode === 'run' || !data.mode ? styles.active : ''}`}
+                onClick={() =>
+                  updateNodeData(selectedNode.id, {
+                    mode: 'run',
+                    label: `Run: ${data.snippetName || 'Snippet'}`
+                  })
+                }
+              >
+                <Play size={14} /> Run
+              </button>
+              <button
+                className={`${data.mode === 'read' ? styles.active : ''}`}
+                onClick={() =>
+                  updateNodeData(selectedNode.id, {
+                    mode: 'read',
+                    label: `Read: ${data.snippetName || 'Snippet'}`
+                  })
+                }
+              >
+                <ArrowDownToLine size={14} /> Read
+              </button>
+              <button
+                className={`${data.mode === 'write' ? styles.active : ''}`}
+                onClick={() =>
+                  updateNodeData(selectedNode.id, {
+                    mode: 'write',
+                    label: `Write: ${data.snippetName || 'Snippet'}`
+                  })
+                }
+              >
+                <Save size={14} /> Write
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Select Snippet</label>
+            <select
+              value={(data.snippetId as string) || ''}
+              onChange={(e) => {
+                const snippetId = e.target.value
+                const snippet = snippets.find((s) => s.id === snippetId)
+                const currentMode = (data.mode as string) || 'run'
+                const modeLabel =
+                  currentMode === 'read' ? 'Read' : currentMode === 'write' ? 'Write' : 'Run'
+
+                updateNodeData(selectedNode.id, {
+                  snippetId,
+                  snippetName: snippet?.title,
+                  code: snippet?.content || '',
+                  label: `${modeLabel}: ${snippet?.title || 'Snippet'}`
+                })
+              }}
+            >
+              <option value="" disabled>
+                Select snippet...
+              </option>
+              {snippets.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title} ({s.language})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Code Preview</label>
+            <textarea
+              readOnly
+              rows={6}
+              value={(data.code as string) || '// No snippet selected'}
+              style={{ opacity: 0.7, fontSize: '0.8rem', cursor: 'default' }}
+            />
+          </div>
+
+          {data.mode === 'read' && (
+            <div className={styles.infoBox}>
+              This will load the snippet text into the output variable without running it.
+            </div>
+          )}
+
+          {data.mode === 'write' && (
+            <div className={styles.formGroup}>
+              <label>Content to Write</label>
+              <input
+                type="text"
+                placeholder="{{ previousNode.output }}"
+                value={(data.writeInput as string) || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { writeInput: e.target.value })}
+              />
+            </div>
+          )}
+
+          {data.mode !== 'write' && (
+            <div className={styles.formGroup}>
+              <label>Store Output To Variable</label>
+              <input
+                type="text"
+                placeholder="e.g. SNIPPET_RESULT"
+                value={(data.outputVar as string) || ''}
+                onChange={(e) => updateNodeData(selectedNode.id, { outputVar: e.target.value })}
+              />
+              <small style={{ color: 'var(--text-muted)' }}>
+                Access this later via <code style={{ fontSize: '0.9em' }}>$SNIPPET_RESULT</code>
+              </small>
+            </div>
+          )}
+        </>
       )}
 
       {(data.type === 'shell' || data.type === 'script') && (

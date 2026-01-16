@@ -52,7 +52,6 @@ export const useSnippetStore = create<SnippetState>()(
         set((state) => ({
           snippets: [newSnippet, ...state.snippets],
           activeSnippetId: newSnippet.id,
-          // Auto-open folder if adding into one
           folders: folderId
             ? state.folders.map((f) => (f.id === folderId ? { ...f, isOpen: true } : f))
             : state.folders

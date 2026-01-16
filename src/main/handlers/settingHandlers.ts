@@ -16,8 +16,8 @@ export function registerSettingHandlers(): void {
     store.set('settings', settings)
 
     if (key === 'theme') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const win = BrowserWindow.fromWebContents(event.sender)
+      win?.webContents.send('theme:changed', value)
     }
 
     return true

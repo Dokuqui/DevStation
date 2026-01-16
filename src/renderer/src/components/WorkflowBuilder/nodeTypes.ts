@@ -1,7 +1,8 @@
-import { ConditionNode, TriggerNode, ActionNode } from './CustomNodes'
+import { ConditionNode, TriggerNode, ActionNode, SnippetNode } from './CustomNodes'
 
 export const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
-  condition: ConditionNode
+  condition: ConditionNode,
+  snippet: SnippetNode
 } as const

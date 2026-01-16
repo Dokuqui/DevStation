@@ -11,17 +11,23 @@ import {
   Square,
   ArrowUpCircle,
   ArrowDownCircle,
-  WorkflowIcon
+  WorkflowIcon,
+  FileCode,
+  Moon,
+  Sun,
+  Github
 } from 'lucide-react'
 import { Project } from '@renderer/types'
 import { useToastStore } from '@renderer/store/useToastStore'
 import { useWorkflowStore } from '@renderer/store/useWorkflowStore'
+import { useSnippetStore } from '@renderer/store/useSnippetStore'
 
 interface Props {
   projects: Project[]
   isOpen: boolean
   onClose: () => void
   onRunScript: (script: string, project: Project) => void
+  onViewChange?: (view: string) => void
 }
 
 type PaletteItem = {
@@ -30,7 +36,15 @@ type PaletteItem = {
   subtext?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any
-  group: 'Projects' | 'Scripts' | 'Global' | 'Processes' | 'Docker' | 'Workflows'
+  group:
+    | 'Projects'
+    | 'Scripts'
+    | 'Global'
+    | 'Processes'
+    | 'Docker'
+    | 'Workflows'
+    | 'Snippets'
+    | 'System'
   action: () => void
 }
 
@@ -38,8 +52,10 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+
   const addToast = useToastStore((state) => state.addToast)
   const workflows = useWorkflowStore((state) => state.workflows)
+  const snippets = useSnippetStore((state) => state.snippets)
 
   const runCommand = useCallback(
     (promise: Promise<unknown>, successTitle: string = 'Success'): void => {
@@ -184,14 +200,50 @@ export function CommandPalette({ projects, onClose, onRunScript }: Props): JSX.E
         icon: WorkflowIcon,
         group: 'Workflows',
         action: () => {
-          // Pass the full object to ensure Main process has data
           runCommand(window.api.runWorkflow(w), `Workflow "${w.name}" Started`)
         }
       })
     })
 
+    snippets.forEach((s) => {
+      list.push({
+        id: `snip-${s.id}`,
+        title: s.title,
+        subtext: `Copy ${s.language} snippet`,
+        icon: FileCode,
+        group: 'Snippets',
+        action: () => {
+          navigator.clipboard.writeText(s.content)
+          addToast('Snippet copied to clipboard', 'success')
+        }
+      })
+    })
+
+    list.push(
+      {
+        id: 'theme-toggle',
+        title: 'Toggle Theme',
+        subtext: 'Switch between Light and Dark mode',
+        icon: document.body.classList.contains('light-mode') ? Moon : Sun,
+        group: 'System',
+        action: () => {
+          const isDark = document.body.classList.contains('dark-mode')
+          document.body.classList.toggle('dark-mode', !isDark)
+          document.body.classList.toggle('light-mode', isDark)
+        }
+      },
+      {
+        id: 'open-github',
+        title: 'Visit GitHub Repo',
+        subtext: 'dokuqui/devstation',
+        icon: Github,
+        group: 'System',
+        action: () => window.open('https://github.com/dokuqui/devstation', '_blank')
+      }
+    )
+
     return list
-  }, [projects, onRunScript, runCommand, workflows])
+  }, [projects, onRunScript, runCommand, workflows, snippets, addToast])
 
   const filteredItems = useMemo(() => {
     if (!query) return items.slice(0, 50)

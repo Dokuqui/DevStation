@@ -104,7 +104,6 @@
   color: var(--text-secondary);
 }
 
-// --- MODAL ---
 .overlay {
   @include modal-overlay;
 }
@@ -140,7 +139,6 @@
   @include scrollbar;
 }
 
-// --- CPU DETAIL ---
 .coreGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -190,7 +188,6 @@
   transition: width 0.4s ease;
 }
 
-// --- MEMORY DETAIL ---
 .memoryGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -233,7 +230,6 @@
   }
 }
 
-// --- DISK DETAIL ---
 .diskList {
   @include flex-col(1rem);
 }
@@ -247,7 +243,7 @@
   transition: all 0.2s ease;
 
   &.mainDisk {
-    border-color: rgba(16, 185, 129, 0.4); // accent-success
+    border-color: rgba(16, 185, 129, 0.4);
     background: linear-gradient(to right, rgba(16, 185, 129, 0.05), transparent);
     box-shadow: 0 4px 20px -5px rgba(16, 185, 129, 0.1);
   }
@@ -341,7 +337,6 @@
   }
 }
 
-// --- NETWORK DETAIL ---
 .netList {
   @include flex-col(1rem);
 }

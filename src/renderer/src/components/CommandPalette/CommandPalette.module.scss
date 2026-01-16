@@ -2,9 +2,9 @@
 
 .overlay {
   @include modal-overlay;
-  align-items: flex-start; // Top alignment
+  align-items: flex-start;
   padding-top: 15vh;
-  background: rgba(0, 0, 0, 0.5); // Slightly lighter for palette
+  background: rgba(0, 0, 0, 0.5);
   animation: fadeIn 0.1s ease-out;
 }
 
@@ -13,7 +13,7 @@
   max-width: 90vw;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px; // Fixed clean radius
+  border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   @include flex-col(0);
   overflow: hidden;
@@ -50,7 +50,7 @@
 .list {
   max-height: 420px;
   overflow-y: auto;
-  padding: 8px 0; // Remove horizontal padding for edge-to-edge items
+  padding: 8px 0;
   @include scrollbar;
 }
 
@@ -69,7 +69,7 @@
   cursor: pointer;
   color: var(--text-secondary);
   transition: all 0.1s;
-  border-left: 3px solid transparent; // Active indicator
+  border-left: 3px solid transparent;
 
   &.active {
     background: var(--bg-hover);

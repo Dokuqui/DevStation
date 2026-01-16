@@ -18,11 +18,15 @@ import {
   Timer,
   Settings2,
   FileCode,
-  Cog
+  Cog,
+  Link as LinkIcon,
+  Check
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useTimeStore } from '@renderer/store/useTimeStore'
 import { GitOpsModal } from '../GitModal/GitOpsModal'
+import { useSnippetStore } from '@renderer/store/useSnippetStore'
+import { useToastStore } from '@renderer/store/useToastStore'
 
 const TYPE_CONFIG = {
   node: { color: '#89faa9', icon: Box, label: 'Node.js' },
@@ -60,6 +64,7 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
   const config = TYPE_CONFIG[project.type] || TYPE_CONFIG.unknown
   const Icon = config.icon
   const scripts = Object.keys(project.scripts)
+  const addToast = useToastStore((state) => state.addToast)
 
   const [runningScripts, setRunningScripts] = useState<Record<string, string>>({})
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,17 +76,44 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
 
   const [isGitModalOpen, setIsGitModalOpen] = useState(false)
 
-  // FIX: Ensure we have a valid initial state and handle updates robustly
   const [gitState, setGitState] = useState(project.git)
   const [prevGitProp, setPrevGitProp] = useState(project.git)
 
-  // Derived state pattern: Sync state when props change from parent (e.g. rescan)
+  const { snippets, updateSnippet } = useSnippetStore()
+  const [showSnippetMenu, setShowSnippetMenu] = useState(false)
+  const snippetMenuRef = useRef<HTMLDivElement>(null)
+
+  const linkedSnippets = snippets.filter((s) => s.linkedProjectIds?.includes(project.id))
+
   if (project.git !== prevGitProp) {
     setPrevGitProp(project.git)
-    // Only update if prop is valid, otherwise keep local state (prevents flashing)
     if (project.git) {
       setGitState(project.git)
     }
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (snippetMenuRef.current && !snippetMenuRef.current.contains(event.target as Node)) {
+        setShowSnippetMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const toggleSnippetLink = (snippetId: string): void => {
+    const snippet = snippets.find((s) => s.id === snippetId)
+    if (!snippet) return
+
+    const currentLinks = snippet.linkedProjectIds || []
+    const isLinked = currentLinks.includes(project.id)
+
+    const newLinks = isLinked
+      ? currentLinks.filter((id) => id !== project.id)
+      : [...currentLinks, project.id]
+
+    updateSnippet(snippetId, { linkedProjectIds: newLinks })
   }
 
   useEffect(() => {
@@ -268,7 +300,6 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
             <div className={styles.gitHeader}>
               <div className={styles.branch}>
                 <GitBranch size={12} />
-                {/* FIX: Ensure fallback if branch is missing */}
                 {gitState.branch || 'HEAD'}
               </div>
               <div className={styles.status}>
@@ -339,68 +370,114 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
           </div>
         </div>
 
+        {linkedSnippets.length > 0 && (
+          <div className={styles.snippetList}>
+            {linkedSnippets.map((s) => (
+              <div
+                key={s.id}
+                className={styles.snippetTag}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigator.clipboard.writeText(s.content)
+                  addToast('Snippet copied', 'success')
+                }}
+                title="Click to copy snippet"
+              >
+                <FileCode size={10} style={{ opacity: 0.7 }} />
+                <span>{s.title}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className={styles.footer}>
           <div className={styles.metaRow}>
             <div className={styles.meta}>
               <Clock size={12} />
               {formatDistanceToNow(new Date(project.lastModified))} ago
             </div>
-
-            <div
-              className={styles.meta}
-              title="Time spent running scripts"
-              style={{
-                color: timeSpent > 0 ? 'var(--accent-secondary)' : 'var(--text-muted)',
-                opacity: timeSpent > 0 ? 1 : 0.5
-              }}
-            >
-              <Timer size={12} />
-              {formatTime(timeSpent)}
-            </div>
+            {timeSpent > 0 && (
+              <div className={styles.meta} style={{ color: 'var(--accent-secondary)' }}>
+                <Timer size={12} />
+                {formatTime(timeSpent)}
+              </div>
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className={styles.footerActions}>
+            {/* Install Button */}
             <button
               className={`${styles.installBtn} ${runningScripts['install'] ? styles.running : ''}`}
               onClick={(e) => {
                 e.stopPropagation()
-                if (runningScripts['install']) {
-                  handleShowTerminal('install', e)
-                } else {
-                  handleRunScript('install', true)
-                }
+                if (runningScripts['install']) handleShowTerminal('install', e)
+                else handleRunScript('install', true)
               }}
             >
               {runningScripts['install'] ? (
                 <>
                   <Loader2 size={14} className={styles.spinner} />
-                  <span>Install Deps</span>
-                  <div
-                    className={styles.stopBtn}
-                    style={{ marginLeft: 6 }}
-                    onClick={(e) => handleStopScript('install', e)}
-                    title="Stop Installation"
-                  >
-                    <Square size={10} fill="currentColor" />
-                  </div>
+                  <span>Install</span>
                 </>
               ) : (
                 <>
                   <Download size={14} />
-                  <span>Install Deps</span>
+                  <span>Install</span>
                 </>
               )}
             </button>
 
-            {/* Git toggle button */}
+            <div style={{ position: 'relative' }}>
+              <button
+                className={`${styles.actionBtn} ${showSnippetMenu ? styles.active : ''}`}
+                onClick={() => setShowSnippetMenu(!showSnippetMenu)}
+                title="Link Snippets"
+              >
+                <LinkIcon size={14} />
+              </button>
+
+              {showSnippetMenu && (
+                <div className={styles.popupMenu} ref={snippetMenuRef}>
+                  <div className={styles.popupHeader}>Attach Snippets</div>
+                  {snippets.length > 0 ? (
+                    snippets.map((s) => {
+                      const isLinked = s.linkedProjectIds?.includes(project.id)
+                      return (
+                        <div
+                          key={s.id}
+                          className={`${styles.popupItem} ${isLinked ? styles.active : ''}`}
+                          onClick={() => toggleSnippetLink(s.id)}
+                        >
+                          <span
+                            style={{
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: '170px'
+                            }}
+                          >
+                            {s.title}
+                          </span>
+                          {isLinked && <Check size={14} />}
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className={styles.empty} style={{ padding: '12px' }}>
+                      No snippets found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {gitState && (
               <button
-                className={styles.gitToggle}
+                className={styles.actionBtn}
                 onClick={() => setIsGitModalOpen(true)}
                 title="Manage Git"
               >
                 <GitBranch size={14} />
-                {gitState.branch || 'HEAD'}
               </button>
             )}
           </div>
@@ -411,7 +488,6 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
         isOpen={isGitModalOpen}
         onClose={() => setIsGitModalOpen(false)}
         project={project}
-        // FIX: Ensure we update state even if data looks partial
         onStatusChange={(newGit) => setGitState((prev) => ({ ...prev, ...newGit }))}
       />
     </>

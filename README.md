@@ -30,6 +30,14 @@
 - **Workflow Preferences:** Set a default editor, toggle auto-fetch, and configure safety confirmations (e.g., "Confirm before Kill").
 - **Theming:** Toggle between **Light** and **Dark** modes (persisted automatically).
 
+### 📝 Snippet Manager & Knowledge Base
+
+- **Polyglot Library:** Store and organize code snippets, shell scripts, and markdown notes in one place.
+- **Monaco Editor:** Full-featured editing experience with syntax highlighting for 15+ languages.
+- **VS Code Import:** Instantly import your existing VS Code `.code-snippets` or JSON snippet files.
+- **Project Linking:** Attach specific snippets to projects. They appear directly on the Project Card for quick access.
+- **Workflow Integration:** Use snippets as executable blocks inside your Automation Workflows.
+
 ### ⚡ Automation Workflow Builder
 
 - **Visual Node Editor:** Drag-and-drop interface to build complex automation flows.
@@ -38,6 +46,7 @@
   - `On Git Pull`.
   - `Cron Schedule`.
   - `On App Start`.
+- **Snippet Node:** Execute your saved snippets directly within workflows (Run code, Read templates, or Write files).
 - **Logic & Branching:** Use **Condition Nodes** to branch logic based on command outputs.
 - **Integrations:**
   - **HTTP Requests:** GET/POST to external APIs.

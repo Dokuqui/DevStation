@@ -32,7 +32,6 @@ export function TerminalView({ id }: Props): JSX.Element {
         cursorAccent: '#ffffff',
         selectionBackground: 'rgba(124, 58, 237, 0.3)',
 
-        // ANSI Colors (Desaturated/Professional)
         black: '#27272a',
         red: '#ef4444',
         green: '#10b981',
@@ -42,7 +41,6 @@ export function TerminalView({ id }: Props): JSX.Element {
         cyan: '#06b6d4',
         white: '#e4e4e7',
 
-        // Bright Variants
         brightBlack: '#52525b',
         brightRed: '#f87171',
         brightGreen: '#34d399',

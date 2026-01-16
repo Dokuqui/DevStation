@@ -9,7 +9,6 @@ interface Props {
 export function ScanningModal({ logs }: Props): JSX.Element {
   const logsEndRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom of logs
   useEffect(() => {
     logsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [logs])
