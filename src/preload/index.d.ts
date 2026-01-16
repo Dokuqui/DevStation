@@ -111,6 +111,19 @@ declare global {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setSetting: (key: string, value: any) => Promise<boolean>
+
+      getEnvFile: (path: string) => Promise<string>
+
+      saveEnvFile: (path: string, content: string) => Promise<boolean>
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      getSecrets: () => Promise<any[]>
+
+      addSecret: (secret: { label: string; value: string; category: string }) => Promise<boolean>
+
+      revealSecret: (id: string) => Promise<string | null>
+
+      deleteSecret: (id: string) => Promise<boolean>
     }
   }
 }

@@ -9,7 +9,6 @@ class PythonDetectorImpl extends BaseDetector {
   async isMatch(folderPath: string): Promise<boolean> {
     if (await this.anyFileExists(folderPath, TARGET_FILES)) return true
 
-    // Fallback: check for any .py file
     try {
       const files = await fs.readdir(folderPath)
       return files.some((f) => f.endsWith('.py'))

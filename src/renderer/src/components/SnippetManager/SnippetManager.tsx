@@ -333,7 +333,6 @@ export function SnippetManager({ projects = [] }: Props): JSX.Element {
         <span className={styles.itemTitle}>{snippet.title || 'Untitled'}</span>
 
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          {/* MOVE BUTTON */}
           <div className={styles.moveWrapper}>
             <div
               onClick={(e) => toggleMoveMenu(e, snippet.id)}
@@ -411,7 +410,6 @@ export function SnippetManager({ projects = [] }: Props): JSX.Element {
 
   return (
     <div className={styles.container}>
-      {/* SIDEBAR */}
       <aside className={styles.sidebar}>
         <div className={styles.toolbar}>
           <div className={styles.searchWrapper}>

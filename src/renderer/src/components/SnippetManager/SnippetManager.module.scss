@@ -1,39 +1,62 @@
 @use '../../assets/mixins' as *;
 
+@mixin custom-scroll {
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.1);
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.3);
+  }
+}
+
 .container {
   display: flex;
   height: 100%;
   width: 100%;
   overflow: hidden;
   background: var(--bg-app);
-  border-radius: 0;
-  border: none;
 }
 
 .sidebar {
-  width: 260px;
-  border-right: 1px solid var(--border);
+  flex: 0 0 280px;
+  width: 280px;
+  max-width: 40vw;
   display: flex;
   flex-direction: column;
+  border-left: 1px solid var(--border-light);
+  border-radius: var(--radius);
   background: var(--bg-sidebar);
 }
 
 .folderSection {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  padding-top: 8px;
 }
 
 .folderItem {
   @include flex(space-between, center);
-  padding: 6px 12px;
+  padding: 8px 16px;
   cursor: pointer;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 0.9rem;
   user-select: none;
-  border-radius: var(--radius-sm);
-  margin: 2px 8px;
+  border-radius: var(--radius);
+  margin: 2px 12px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  min-width: 0;
 
   &:hover {
     background: var(--bg-hover);
@@ -45,12 +68,24 @@
 }
 
 .folderHeader {
-  @include flex(flex-start, center, 8px);
+  @include flex(flex-start, center, 10px);
   flex: 1;
   overflow: hidden;
+  min-width: 0;
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   svg {
-    opacity: 0.7;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  &:hover svg {
+    opacity: 0.9;
   }
 }
 
@@ -58,23 +93,25 @@
   opacity: 0;
   @include flex(flex-end, center, 4px);
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .folderContent {
-  padding-left: 10px;
+  padding-left: 0;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--border);
-  margin-left: 14px;
+  margin-left: 24px;
+  border-left: 1px solid var(--border-light);
   margin-bottom: 4px;
 }
 
 .iconBtnSmall {
   @include btn-icon;
-  width: 20px;
-  height: 20px;
-  padding: 2px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
   color: var(--text-muted);
+  border-radius: 4px;
 
   &:hover {
     background: var(--bg-active);
@@ -83,80 +120,89 @@
 }
 
 .sectionTitle {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 16px 16px 8px 16px;
-  letter-spacing: 0.05em;
-  opacity: 0.6;
+  padding: 24px 20px 8px 20px;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .toolbar {
-  padding: 1rem;
+  padding: 1.5rem 1rem 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  border-bottom: 1px solid var(--border);
+  gap: 1.25rem;
+  flex-shrink: 0;
 }
 
 .searchWrapper {
   position: relative;
+  width: 100%;
 
   svg {
     @include absolute-center;
-    left: 12px;
+    left: 14px;
     color: var(--text-muted);
     pointer-events: none;
     z-index: 2;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 
   input {
     @include input-base;
-    padding-left: 36px;
+    width: 100%;
+    padding-left: 42px;
     background: var(--bg-input);
-    border-color: transparent;
-    font-size: 0.85rem;
-    height: 36px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    height: 40px;
+    transition: all 0.2s ease;
 
     &:focus {
-      background: var(--bg-hover);
-      border-color: var(--border-focus);
-      box-shadow: none;
+      background: var(--bg-app);
+      box-shadow: 0 0 0 2px var(--bg-active);
     }
 
     &::placeholder {
       color: var(--text-muted);
+      opacity: 0.7;
     }
   }
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
 
   button {
     flex: 1;
+    min-width: 100px;
     @include btn-base;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+
+    background: var(--bg-hover);
+    border: none;
+    border-radius: 8px;
     padding: 8px;
     color: var(--text-secondary);
-    font-size: 0.8rem;
-    font-weight: 600;
-    transition: all 0.15s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 
     &:hover {
-      border-color: var(--text-muted);
       color: var(--text-main);
-      background: var(--bg-hover);
+      background: var(--bg-active);
       transform: translateY(-1px);
     }
 
     div {
-      @include flex(center, center, 6px);
+      @include flex(center, center, 8px);
     }
   }
 }
@@ -164,10 +210,12 @@
 .list {
   flex: 1;
   overflow-y: auto;
-  @include scrollbar;
-  padding: 8px 0;
+  overflow-x: hidden;
+  @include custom-scroll;
+  padding: 12px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
 }
 
 .folderInputRow {
@@ -175,15 +223,16 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: var(--bg-hover);
-  margin: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--accent-primary);
+  background: var(--bg-app);
+  margin: 4px 12px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   animation: fadeIn 0.2s ease;
 
   svg {
     opacity: 0.7;
     color: var(--text-muted);
+    flex-shrink: 0;
   }
 }
 
@@ -191,11 +240,10 @@
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
   width: 100%;
   outline: none;
-
   &::placeholder {
     color: var(--text-muted);
   }
@@ -208,46 +256,45 @@
   right: 0;
   bottom: 0;
   z-index: 99;
-  cursor: default;
+  background: transparent;
 }
 
 .linkMenu {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 240px;
-  max-height: 280px;
+  width: 260px;
+  max-height: 300px;
   overflow-y: auto;
   @include scrollbar;
-
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card);
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
   z-index: 100;
   margin-top: 8px;
   display: flex;
   flex-direction: column;
-  padding: 4px;
-  animation: fadeIn 0.1s ease;
+  padding: 6px;
+  animation: slideDownFade 0.15s ease;
 }
 
 .linkMenuHeader {
   padding: 8px 12px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
+  opacity: 0.8;
 }
 
 .linkItem {
-  @include flex(flex-start, center, 10px);
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  @include flex(flex-start, center, 12px);
+  padding: 10px 12px;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
 
@@ -255,9 +302,8 @@
     background: var(--bg-hover);
     color: var(--text-main);
   }
-
   &.linked {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.08);
     color: var(--accent-success);
     font-weight: 500;
   }
@@ -267,28 +313,28 @@
   margin-left: auto;
   color: var(--accent-success);
 }
-
 .emptyLink {
-  padding: 1rem;
+  padding: 1.5rem;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .snippetItem {
-  padding: 12px 1.5rem;
+  padding: 14px 16px;
   cursor: pointer;
-  border-left: 3px solid transparent;
-  transition: all 0.15s ease;
+  border: none;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: transparent;
+  min-width: 0;
 
   &:hover {
     background: var(--bg-hover);
   }
 
   &.active {
-    background: var(--bg-hover);
-    border-left-color: var(--accent-primary);
-
+    background: var(--bg-active);
     .itemTitle {
       color: var(--text-main);
       font-weight: 600;
@@ -299,40 +345,42 @@
     .langBadge {
       border-color: var(--accent-primary);
       color: var(--accent-primary);
+      background: rgba(var(--accent-primary-rgb), 0.1);
     }
   }
 }
 
 .itemHeader {
   @include flex(space-between, center);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .itemTitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   font-weight: 500;
   @include text-truncate;
   flex: 1;
-  padding-right: 8px;
+  padding-right: 12px;
+  transition: color 0.2s;
 }
 
 .itemMeta {
-  @include flex(flex-start, center, 8px);
-  font-size: 0.7rem;
+  @include flex(flex-start, center, 10px);
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .langBadge {
-  background: transparent;
-  border: 1px solid var(--border);
-  padding: 1px 5px;
-  border-radius: 4px;
+  background: var(--bg-input);
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  border-radius: 6px;
   font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
   color: var(--text-muted);
+  transition: all 0.2s;
 }
 
 .editor {
@@ -342,56 +390,60 @@
   background: var(--bg-app);
   position: relative;
   min-width: 0;
+  overflow: hidden;
 }
 
 .editorHeader {
-  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 1rem 2rem;
+  padding: 2rem 3rem 1rem 3rem;
   background: var(--bg-app);
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-shrink: 0;
 }
 
 .headerTop {
   @include flex(space-between, center);
   width: 100%;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .titleInput {
   background: transparent;
   border: none;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
   color: var(--text-main);
   outline: none;
   flex: 1;
+  min-width: 150px;
   font-family: inherit;
+  line-height: 1.2;
 
   &::placeholder {
     color: var(--text-muted);
-    opacity: 0.5;
+    opacity: 0.3;
   }
 }
 
 .headerControls {
-  @include flex(flex-end, center, 8px);
+  @include flex(flex-end, center, 12px);
+  flex-shrink: 0;
 }
 
 .iconBtn {
   @include btn-icon;
   color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   &:hover {
     color: var(--text-main);
     background: var(--bg-hover);
-    border-color: var(--border);
   }
-
   &.active {
     color: var(--accent-primary);
     background: var(--bg-active);
@@ -401,23 +453,32 @@
 .metaRow {
   @include flex(space-between, center);
   width: 100%;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .tagsWrapper {
-  @include flex(flex-start, center, 6px);
+  @include flex(flex-start, center, 8px);
   flex-wrap: wrap;
   flex: 1;
+  min-width: 200px;
 }
 
 .tag {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
+  background: var(--bg-hover);
+  border: none;
   color: var(--text-secondary);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  @include flex(center, center, 4px);
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 16px;
+  @include flex(center, center, 6px);
   cursor: default;
+  transition: background 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--bg-active);
+  }
 
   button {
     border: none;
@@ -426,6 +487,8 @@
     padding: 0;
     display: flex;
     color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
     &:hover {
       color: var(--accent-danger);
     }
@@ -436,26 +499,34 @@
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 0.75rem;
-  width: 100px;
+  font-size: 0.8rem;
+  width: 120px;
   outline: none;
-
+  padding-left: 4px;
   &::placeholder {
     color: var(--text-muted);
-    font-style: italic;
+    opacity: 0.6;
   }
 }
 
 .select {
   @include input-base;
   width: auto;
-  min-width: 120px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  height: 28px;
-  background-color: var(--bg-input);
-  border-color: var(--border);
-  color: var(--text-secondary);
+  min-width: 130px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--text-main);
+    background: var(--bg-hover);
+    border-radius: 6px;
+  }
 }
 
 .contentArea {
@@ -468,53 +539,65 @@
 
 .previewMode {
   flex: 1;
-  padding: 2rem;
+  padding: 1rem 3rem 4rem 3rem;
   overflow-y: auto;
   background: var(--bg-app);
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
-  line-height: 1.6;
+  line-height: 1.7;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  @include custom-scroll;
 
   h1,
   h2,
   h3 {
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
+    margin-top: 2em;
+    margin-bottom: 0.6em;
     color: var(--text-main);
+    font-weight: 700;
   }
   p {
-    margin-bottom: 1em;
+    margin-bottom: 1.2em;
     color: var(--text-secondary);
   }
   code {
-    background: var(--bg-input);
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
+    background: var(--bg-hover);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--accent-primary);
   }
+
   pre {
     background: var(--bg-card);
-    padding: 1rem;
-    border-radius: var(--radius);
+    padding: 1.5rem;
+    border-radius: 12px;
     overflow-x: auto;
-    margin-bottom: 1em;
-    border: 1px solid var(--border);
+    margin: 1.5em 0;
+    border: none;
+    box-shadow: inset 0 0 0 1px var(--border-light);
     code {
       background: transparent;
       padding: 0;
+      color: inherit;
     }
   }
+
   ul,
   ol {
     padding-left: 1.5rem;
-    margin-bottom: 1em;
+    margin-bottom: 1.2em;
+    color: var(--text-secondary);
   }
   blockquote {
-    border-left: 4px solid var(--accent-primary);
-    padding-left: 1rem;
+    border-left: 3px solid var(--accent-primary);
+    padding-left: 1.25rem;
     margin-left: 0;
     color: var(--text-muted);
+    font-style: italic;
   }
 }
 
@@ -529,10 +612,10 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: var(--bg-app);
+  background: rgba(var(--bg-app-rgb), 0.8);
+  backdrop-filter: blur(2px);
   z-index: 10;
   color: var(--text-muted);
-  font-size: 0.9rem;
 }
 
 .spin {
@@ -545,18 +628,17 @@
   @include flex(center, center);
   flex-direction: column;
   color: var(--text-muted);
-  gap: 1.5rem;
-
+  gap: 2rem;
   svg {
-    opacity: 0.1;
-    width: 80px;
-    height: 80px;
+    opacity: 0.05;
+    width: 100px;
+    height: 100px;
   }
-
   p {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 500;
     color: var(--text-secondary);
+    opacity: 0.7;
   }
 }
 
@@ -568,43 +650,65 @@
   position: absolute;
   top: 100%;
   right: 0;
-  width: 160px;
+  width: 180px;
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  border: none;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
   z-index: 50;
   display: flex;
   flex-direction: column;
-  padding: 4px;
-  margin-top: 4px;
-  animation: fadeIn 0.1s ease;
+  padding: 6px;
+  margin-top: 8px;
+  animation: fadeIn 0.15s ease;
 }
 
 .moveItem {
-  padding: 6px 10px;
-  font-size: 0.8rem;
+  padding: 8px 12px;
+  font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  transition: all 0.15s ease;
 
   &:hover {
     background: var(--bg-hover);
     color: var(--text-main);
   }
-
   &.current {
     color: var(--accent-primary);
     font-weight: 600;
-    background: var(--bg-hover);
+    background: rgba(var(--accent-primary-rgb), 0.05);
   }
 }
 
 .moveDivider {
   height: 1px;
-  background: var(--border);
-  margin: 4px 0;
+  background: var(--border-light);
+  margin: 4px 8px;
+  opacity: 0.5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

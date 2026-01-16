@@ -137,55 +137,28 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
   const preferred = PREFERRED_IDES[project.type] || PREFERRED_IDES.unknown
   const validIDEs = availableIDEs.filter((ide) => preferred.includes(ide.id) || ide.id === 'custom')
 
-  const handleRunScript = async (scriptName: string, isInstall = false): Promise<void> => {
-    let command = ''
-    if (isInstall) {
-      command = project.installCommand || 'npm install'
-    } else {
-      command = `${project.runnerCommand || 'npm run'} ${project.scripts[scriptName]}`
-    }
+  const handleRunScript = (scriptName: string, isInstall = false): void => {
+    if (!onRunScript) return
 
-    if (!command) return
+    const effectiveName = isInstall ? 'install' : scriptName
 
-    if (onRunScript) onRunScript(scriptName, project)
+    onRunScript(effectiveName, project)
 
-    const termId = `${project.id}-${scriptName}`
+    const termId = `${project.id}-${effectiveName}`
 
-    setRunningScripts((prev) => ({ ...prev, [scriptName]: termId }))
+    setRunningScripts((prev) => ({ ...prev, [effectiveName]: termId }))
 
-    try {
-      const res = await window.api.createTerminal(termId, project.path, command)
-
-      if (res.success) {
-        if (onShowTerminal) onShowTerminal(termId)
-
-        const cleanup = window.api.onTerminalExit(termId, () => {
-          setRunningScripts((prev) => {
-            if (prev[scriptName] === termId) {
-              const next = { ...prev }
-              delete next[scriptName]
-              return next
-            }
-            return prev
-          })
-        })
-        listenersRef.current[termId] = cleanup
-      } else {
-        console.error('Failed to start:', res.error)
-        setRunningScripts((prev) => {
-          const next = { ...prev }
-          delete next[scriptName]
-          return next
-        })
-      }
-    } catch (err) {
-      console.error(err)
+    const cleanup = window.api.onTerminalExit(termId, () => {
       setRunningScripts((prev) => {
-        const next = { ...prev }
-        delete next[scriptName]
-        return next
+        if (prev[effectiveName] === termId) {
+          const next = { ...prev }
+          delete next[effectiveName]
+          return next
+        }
+        return prev
       })
-    }
+    })
+    listenersRef.current[termId] = cleanup
   }
 
   const handleStopScript = async (scriptName: string, e: React.MouseEvent): Promise<void> => {

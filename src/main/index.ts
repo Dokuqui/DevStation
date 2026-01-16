@@ -14,6 +14,7 @@ import { registerWorkflowHandlers } from './handlers/workflowHandlers'
 import { registerAllWorkflows } from './workflows/scheduler'
 import { registerSettingHandlers } from './handlers/settingHandlers'
 import { registerCommandHandlers } from './handlers/commandHandlers'
+import { registerVaultHandlers } from './handlers/vaultHandler'
 
 ipcMain.handle('window:update-theme', (_event, theme: 'dark' | 'light') => {
   const win = BrowserWindow.getAllWindows()[0]
@@ -100,6 +101,7 @@ app.whenReady().then(async () => {
   registerGitHandlers()
   registerWorkflowHandlers()
   registerSettingHandlers()
+  registerVaultHandlers()
 
   app.on('browser-window-created', (_e, window) => {
     optimizer.watchWindowShortcuts(window)

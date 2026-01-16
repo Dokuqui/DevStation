@@ -6,6 +6,7 @@ import {
   Cpu,
   Download,
   FolderSearch,
+  Key,
   LayoutGrid,
   Moon,
   SettingsIcon,
@@ -30,8 +31,9 @@ import { Settings } from './components/Settings/Settings'
 import { SnippetManager } from './components/SnippetManager/SnippetManager'
 import { useSnippetStore } from './store/useSnippetStore'
 import { ProjectSearch } from './components/ProjectSearch/ProjectSearch'
+import { Vault } from './components/Vault/Vault'
 
-type View = 'projects' | 'system' | 'workflows' | 'snippets' | 'settings'
+type View = 'projects' | 'system' | 'workflows' | 'snippets' | 'vault' | 'settings'
 
 function App(): JSX.Element {
   const loadWorkflows = useWorkflowStore((state) => state.loadWorkflows)
@@ -149,27 +151,34 @@ function App(): JSX.Element {
     }
   }
 
-  const handleRunScript = async (scriptName: string, project: Project): Promise<void> => {
+  const runGlobalCommand = async (scriptName: string, project: Project): Promise<void> => {
     let command = ''
 
     if ((!scriptName || scriptName === 'install') && project.installCommand) {
       command = project.installCommand
     } else {
-      const runner = project.runnerCommand || 'npm run'
-      command = `${runner} ${scriptName}`
+      if (project.type === 'node') {
+        const runner = project.runnerCommand || 'npm run'
+        command = `${runner} ${scriptName}`
+      } else {
+        command = project.scripts[scriptName]
+      }
     }
 
     const terminalId = `${project.id}-${scriptName || 'install'}`
 
     await window.api.createTerminal(terminalId, project.path, command)
 
+    updateActiveSession(scriptName, project)
+    setIsPaletteOpen(false)
+  }
+
+  const updateActiveSession = (scriptName: string, project: Project): void => {
     if (!scriptName || scriptName === 'install') {
       setActiveSession({ script: 'install', project })
     } else {
       setActiveSession({ script: scriptName, project })
     }
-
-    setIsPaletteOpen(false)
   }
 
   const filteredProjects = useMemo(() => {
@@ -237,6 +246,14 @@ function App(): JSX.Element {
             >
               <BookMarked size={18} />
               <span>Knowledge</span>
+            </button>
+
+            <button
+              className={`${styles.navItem} ${currentView === 'vault' ? styles.active : ''}`}
+              onClick={() => setCurrentView('vault')}
+            >
+              <Key size={18} />
+              <span>Key Vault</span>
             </button>
 
             <button
@@ -311,7 +328,7 @@ function App(): JSX.Element {
                   ) : (
                     <div className={styles.grid}>
                       {filteredProjects.map((p) => (
-                        <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
+                        <ProjectCard key={p.id} project={p} onRunScript={runGlobalCommand} />
                       ))}
                     </div>
                   )}
@@ -379,6 +396,8 @@ function App(): JSX.Element {
 
           {currentView === 'snippets' && <SnippetManager projects={projects} />}
 
+          {currentView === 'vault' && <Vault projects={projects} />}
+
           {currentView === 'settings' && <Settings />}
         </main>
 
@@ -387,7 +406,7 @@ function App(): JSX.Element {
             projects={projects}
             isOpen={true}
             onClose={() => setIsPaletteOpen(false)}
-            onRunScript={handleRunScript}
+            onRunScript={runGlobalCommand}
           />
         )}
 

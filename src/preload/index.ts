@@ -146,7 +146,21 @@ const api = {
   getSettings: (key?: string) => ipcRenderer.invoke('settings:get', key),
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setSetting: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value)
+  setSetting: (key: string, value: any) => ipcRenderer.invoke('settings:set', key, value),
+
+  getEnvFile: (path: string) => ipcRenderer.invoke('vault:get-env', path),
+
+  saveEnvFile: (path: string, content: string) =>
+    ipcRenderer.invoke('vault:save-env', { path, content }),
+
+  getSecrets: () => ipcRenderer.invoke('vault:get-secrets'),
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addSecret: (secret: any) => ipcRenderer.invoke('vault:add-secret', secret),
+
+  revealSecret: (id: string) => ipcRenderer.invoke('vault:reveal-secret', id),
+
+  deleteSecret: (id: string) => ipcRenderer.invoke('vault:delete-secret', id)
 }
 
 if (process.contextIsolated) {
