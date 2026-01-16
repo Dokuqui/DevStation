@@ -1,6 +1,6 @@
 import { Workflow } from '@renderer/types'
 import { ipcMain } from 'electron'
-import { getStore } from '../store'
+import { getStore } from '../services/store'
 import { runWorkflow } from '../workflows/engine'
 import { registerWorkflow, unregisterWorkflow, stopAllWorkflows } from '../workflows/scheduler'
 

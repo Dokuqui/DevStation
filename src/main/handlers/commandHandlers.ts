@@ -7,7 +7,7 @@ import {
   dockerPrune,
   dockerComposeUp,
   dockerComposeDown
-} from '../commands'
+} from '../services/commands'
 import { runWorkflow } from '../workflows/engine'
 
 export function registerCommandHandlers(): void {

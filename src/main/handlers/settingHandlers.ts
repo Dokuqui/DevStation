@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { getStore } from '../store'
+import { getStore } from '../services/store'
 
 export function registerSettingHandlers(): void {
   ipcMain.handle('settings:get', async (_event, key) => {

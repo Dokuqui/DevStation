@@ -2,7 +2,7 @@ import cron from 'node-cron'
 import chokidar from 'chokidar'
 import { Workflow } from '../../shared/types'
 import { runWorkflow } from './engine'
-import { monitorEvents } from '../monitor'
+import { monitorEvents } from '../services/monitor'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const activeTasks: Record<string, any[]> = {}

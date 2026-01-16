@@ -1,6 +1,15 @@
 import { ipcMain } from 'electron'
-import { cloneRepository, getGitStatus, gitCheckout, gitCommit, gitFetch, gitPull, gitPush, gitStash } from '../git'
-import { loginWithGitHub, getGitHubRepos, isGitHubLoggedIn, logoutGitHub } from '../github'
+import {
+  cloneRepository,
+  getGitStatus,
+  gitCheckout,
+  gitCommit,
+  gitFetch,
+  gitPull,
+  gitPush,
+  gitStash
+} from '../services/git'
+import { loginWithGitHub, getGitHubRepos, isGitHubLoggedIn, logoutGitHub } from '../services/github'
 
 export function registerGitHandlers(): void {
   ipcMain.handle('git:clone', async (_event, { url, parentPath, shallow }) => {

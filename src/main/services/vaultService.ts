@@ -1,7 +1,7 @@
 import { safeStorage } from 'electron'
 import fs from 'fs/promises'
 import path from 'path'
-import { getStore } from '../store'
+import { getStore } from './store'
 
 interface EncryptedSecret {
   id: string

@@ -1,9 +1,9 @@
 import { ipcMain, BrowserWindow, dialog } from 'electron'
-import { scanProjects } from '../scan'
-import { openInIDE, detectIDEs, selectCustomIDE } from '../ide'
-import { getProjectTimes, updateKnownProjects } from '../tracker'
+import { scanProjects } from '../services/scan'
+import { openInIDE, detectIDEs, selectCustomIDE } from '../services/ide'
+import { getProjectTimes, updateKnownProjects } from '../services/tracker'
 import { spawn } from 'child_process'
-import { registerExternalProcess } from '../tracker'
+import { registerExternalProcess } from '../services/tracker'
 import { createHash } from 'crypto'
 import { IDE } from '@renderer/types'
 
