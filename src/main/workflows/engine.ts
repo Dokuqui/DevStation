@@ -2,8 +2,12 @@ import { Workflow, WorkflowNode, WorkflowEdge } from '../../shared/types'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { BrowserWindow, Notification } from 'electron'
+import vm from 'vm'
 
 const execAsync = promisify(exec)
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ExecutionContext = Record<string, any>
 
 function getNextNodes(
   currentId: string,
@@ -27,21 +31,96 @@ interface ExecutionResult {
   nextHandle?: string
 }
 
-async function executeNode(node: WorkflowNode, prevOutput: string = ''): Promise<ExecutionResult> {
-  const { type, command, label, message, duration, url, method, body, operator, comparisonValue } =
-    node.data
+function replaceVariables(text: string, input: string, context: ExecutionContext): string {
+  let result = text.replace(/{{input}}/g, input || '')
+
+  result = result.replace(/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/g, (_, varName) => {
+    return context[varName] !== undefined ? String(context[varName]) : ''
+  })
+
+  return result
+}
+
+async function executeNode(
+  node: WorkflowNode,
+  prevOutput: string = '',
+  context: ExecutionContext
+): Promise<ExecutionResult> {
+  const {
+    type,
+    command,
+    label,
+    message,
+    duration,
+    url,
+    method,
+    body,
+    operator,
+    comparisonValue,
+    snippetId,
+    code,
+    mode,
+    outputVar,
+    writeInput
+  } = node.data
 
   console.log(`[Workflow] Step: ${label} (${type})`)
 
   switch (type) {
+    case 'snippet': {
+      if (!code && mode !== 'write') return { success: false, output: 'No code content' }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any = ''
+
+      if (mode === 'read') {
+        result = code
+      } else if (mode === 'write') {
+        const contentToWrite = writeInput
+          ? replaceVariables(writeInput as string, prevOutput, context)
+          : prevOutput
+
+        const win = BrowserWindow.getAllWindows()[0]
+        if (win) {
+          win.webContents.send('workflow:update-snippet', {
+            id: snippetId,
+            content: contentToWrite
+          })
+        }
+        result = `Updated snippet ${snippetId}`
+      } else {
+        try {
+          const sandbox = {
+            console: { log: () => {} },
+            input: prevOutput,
+            ...context
+          }
+          vm.createContext(sandbox)
+
+          const script = `(async () => { ${code} \n})()`
+          result = await vm.runInContext(script, sandbox)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (e: any) {
+          console.error('[Snippet Error]', e)
+          throw new Error(`Snippet execution failed: ${e.message}`)
+        }
+      }
+
+      if (outputVar && typeof outputVar === 'string') {
+        context[outputVar] = result
+        console.log(`[Var] Stored result in $${outputVar}`)
+      }
+
+      return {
+        success: true,
+        output: typeof result === 'object' ? JSON.stringify(result) : String(result)
+      }
+    }
     case 'shell':
     case 'script': {
       if (!command) return { success: false }
 
-      let finalCommand = command as string
-      if (prevOutput) {
-        finalCommand = finalCommand.replace(/{{input}}/g, prevOutput)
-      }
+      const finalCommand = replaceVariables(command as string, prevOutput, context)
 
       console.log(`[Executing] ${finalCommand}`)
 
@@ -64,18 +143,21 @@ async function executeNode(node: WorkflowNode, prevOutput: string = ''): Promise
     case 'http':
       if (!url) throw new Error('No URL provided for HTTP request')
       try {
-        console.log(`[HTTP] ${method || 'GET'} ${url}`)
+        const finalUrl = replaceVariables(url as string, prevOutput, context)
+        const finalBody = body ? replaceVariables(body as string, prevOutput, context) : undefined
+
+        console.log(`[HTTP] ${method || 'GET'} ${finalUrl}`)
 
         const fetchOpts: RequestInit = {
           method: (method as string) || 'GET',
           headers: { 'Content-Type': 'application/json' }
         }
 
-        if (method !== 'GET' && method !== 'HEAD' && body) {
-          fetchOpts.body = body as string
+        if (method !== 'GET' && method !== 'HEAD' && finalBody) {
+          fetchOpts.body = finalBody
         }
 
-        const res = await fetch(url as string, fetchOpts)
+        const res = await fetch(finalUrl, fetchOpts)
         const text = await res.text()
         return { success: res.ok, output: text }
       } catch (error) {
@@ -86,7 +168,9 @@ async function executeNode(node: WorkflowNode, prevOutput: string = ''): Promise
     case 'condition': {
       let isMatch = false
       const val = prevOutput || ''
-      const target = (comparisonValue as string) || ''
+
+      const rawTarget = (comparisonValue as string) || ''
+      const target = replaceVariables(rawTarget, prevOutput, context)
 
       if (operator === 'contains') isMatch = val.includes(target)
       else if (operator === 'equals') isMatch = val === target
@@ -104,7 +188,8 @@ async function executeNode(node: WorkflowNode, prevOutput: string = ''): Promise
     case 'notify': {
       {
         const toastType = (node.data.notificationType as string) || 'info'
-        const msg = (message as string) || `Workflow step "${label}" completed`
+        const rawMsg = (message as string) || `Workflow step "${label}" completed`
+        const msg = replaceVariables(rawMsg, prevOutput, context)
         const isNative = node.data.native === true
 
         const win = BrowserWindow.getAllWindows()[0]
@@ -138,6 +223,7 @@ async function executeNode(node: WorkflowNode, prevOutput: string = ''): Promise
 
 export async function runWorkflow(workflow: Workflow, startNodeId?: string): Promise<void> {
   console.log(`[Workflow] Starting: ${workflow.name}`)
+  const executionContext: ExecutionContext = {}
 
   let currentBatch: WorkflowNode[] = []
   if (startNodeId) {
@@ -145,7 +231,7 @@ export async function runWorkflow(workflow: Workflow, startNodeId?: string): Pro
     if (node) currentBatch = [node]
   } else {
     const targetIds = new Set(workflow.edges.map((e) => e.target))
-    currentBatch = workflow.nodes.filter((n) => !targetIds.has(n.id))
+    currentBatch = workflow.nodes.filter((n) => !targetIds.has(n.id) || n.type === 'trigger')
   }
 
   const queue: { node: WorkflowNode; input: string }[] = currentBatch.map((n) => ({
@@ -163,7 +249,7 @@ export async function runWorkflow(workflow: Workflow, startNodeId?: string): Pro
     }
 
     try {
-      const result = await executeNode(node, input)
+      const result = await executeNode(node, input, executionContext)
 
       const nextNodes = getNextNodes(node.id, workflow.edges, workflow.nodes, result.nextHandle)
 

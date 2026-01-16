@@ -1,4 +1,4 @@
-import { JSX, useState, useEffect } from 'react'
+import { JSX, useState, useEffect, useMemo } from 'react'
 import styles from './App.module.scss'
 import {
   BookMarked,
@@ -28,6 +28,8 @@ import { useToastStore } from './store/useToastStore'
 import { CloneModal } from './components/CloneModal/CloneModal'
 import { Settings } from './components/Settings/Settings'
 import { SnippetManager } from './components/SnippetManager/SnippetManager'
+import { useSnippetStore } from './store/useSnippetStore'
+import { ProjectSearch } from './components/ProjectSearch/ProjectSearch'
 
 type View = 'projects' | 'system' | 'workflows' | 'snippets' | 'settings'
 
@@ -45,9 +47,11 @@ function App(): JSX.Element {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [isCloneOpen, setIsCloneOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const updateTimes = useTimeStore((state) => state.updateTimes)
   const addToast = useToastStore((state) => state.addToast)
+  const updateSnippet = useSnippetStore((state) => state.updateSnippet)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'dark' | 'light' | null
@@ -55,6 +59,14 @@ function App(): JSX.Element {
       setTheme(savedTheme)
       document.body.classList.toggle('light-mode', savedTheme === 'light')
     }
+  }, [])
+
+  useEffect(() => {
+    const removeListener = window.api.onSnippetUpdate((data) => {
+      updateSnippet(data.id, { content: data.content })
+      addToast('Snippet updated by Workflow', 'success')
+    })
+    return () => removeListener()
   }, [])
 
   const toggleTheme = (): void => {
@@ -122,6 +134,7 @@ function App(): JSX.Element {
     setIsScanning(true)
     setScanLogs([])
     setCurrentView('projects')
+    setSearchQuery('')
 
     const removeLogListener = window.api.onScanLog((msg) => {
       setScanLogs((prev) => [...prev.slice(-49), msg])
@@ -136,13 +149,40 @@ function App(): JSX.Element {
     }
   }
 
-  const handleRunScript = (scriptName: string, project: Project): void => {
-    if (!scriptName && project.installCommand) {
+  const handleRunScript = async (scriptName: string, project: Project): Promise<void> => {
+    let command = ''
+
+    if ((!scriptName || scriptName === 'install') && project.installCommand) {
+      command = project.installCommand
+    } else {
+      const runner = project.runnerCommand || 'npm run'
+      command = `${runner} ${scriptName}`
+    }
+
+    const terminalId = `${project.id}-${scriptName || 'install'}`
+
+    await window.api.createTerminal(terminalId, project.path, command)
+
+    if (!scriptName || scriptName === 'install') {
       setActiveSession({ script: 'install', project })
     } else {
       setActiveSession({ script: scriptName, project })
     }
+
+    setIsPaletteOpen(false)
   }
+
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery) return projects
+    const lowerQuery = searchQuery.toLowerCase()
+
+    return projects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.path.toLowerCase().includes(lowerQuery) ||
+        p.type.toLowerCase().includes(lowerQuery)
+    )
+  }, [projects, searchQuery])
 
   const { activeWorkflowId, closeEditor } = useWorkflowStore()
 
@@ -232,8 +272,14 @@ function App(): JSX.Element {
           {currentView === 'projects' && (
             <>
               <div className={styles.header}>
-                <h1>Projects</h1>
-                <span className={styles.badge}>{projects.length}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <h1>Projects</h1>
+                  <span className={styles.badge}>{filteredProjects.length}</span>
+                </div>
+
+                {projects.length > 0 && (
+                  <ProjectSearch value={searchQuery} onChange={setSearchQuery} />
+                )}
               </div>
 
               {projects.length === 0 ? (
@@ -244,11 +290,32 @@ function App(): JSX.Element {
                   </span>
                 </div>
               ) : (
-                <div className={styles.grid}>
-                  {projects.map((p) => (
-                    <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
-                  ))}
-                </div>
+                <>
+                  {filteredProjects.length === 0 ? (
+                    <div className={styles.emptyState}>
+                      <p>No projects match &quot;{searchQuery}&quot;</p>
+                      <button
+                        className={styles.btnLink}
+                        onClick={() => setSearchQuery('')}
+                        style={{
+                          marginTop: 8,
+                          color: 'var(--accent-primary)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Clear Search
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.grid}>
+                      {filteredProjects.map((p) => (
+                        <ProjectCard key={p.id} project={p} onRunScript={handleRunScript} />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

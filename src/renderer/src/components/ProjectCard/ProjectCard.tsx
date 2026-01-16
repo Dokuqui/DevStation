@@ -20,7 +20,8 @@ import {
   FileCode,
   Cog,
   Link as LinkIcon,
-  Check
+  Check,
+  Save
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useTimeStore } from '@renderer/store/useTimeStore'
@@ -84,6 +85,8 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
   const snippetMenuRef = useRef<HTMLDivElement>(null)
 
   const linkedSnippets = snippets.filter((s) => s.linkedProjectIds?.includes(project.id))
+
+  const { addSnippet } = useSnippetStore()
 
   if (project.git !== prevGitProp) {
     setPrevGitProp(project.git)
@@ -222,6 +225,39 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
     }
   }
 
+  const handleSaveSession = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+
+    const today = new Date().toLocaleDateString()
+    const duration = formatTime(timeSpent)
+
+    const noteContent = `
+# ⏱️ Session Log: ${project.name}
+**Date:** ${today}
+**Duration:** ${duration}
+
+## Work Done
+- [ ] Added new feature...
+- [ ] Fixed bug in...
+    `.trim()
+
+    const newSnippetId = crypto.randomUUID()
+
+    addSnippet({
+      id: newSnippetId,
+      title: `Session: ${today} (${duration})`,
+      type: 'note',
+      language: 'markdown',
+      content: noteContent,
+      linkedProjectIds: [project.id],
+      tags: ['time-log'],
+      folderId: null,
+      favorite: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    })
+  }
+
   return (
     <>
       <div className={styles.card}>
@@ -247,7 +283,7 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
             <div className={styles.ideWrapper}>
               <button onClick={handleIdeClick} className={styles.actionBtn} title="Select Editor">
                 <Code size={16} />
-                <ChevronDown size={12} />
+                <ChevronDown size={8} />
               </button>
 
               {showIdeMenu && (
@@ -400,6 +436,16 @@ export function ProjectCard({ project, onRunScript, onShowTerminal }: Props): JS
               <div className={styles.meta} style={{ color: 'var(--accent-secondary)' }}>
                 <Timer size={12} />
                 {formatTime(timeSpent)}
+                {timeSpent > 0 && (
+                  <button
+                    onClick={handleSaveSession}
+                    className={styles.actionBtn} // Use your existing class
+                    style={{ width: 20, height: 20, marginLeft: 8 }}
+                    title="Save Session to Snippets"
+                  >
+                    <Save size={12} />
+                  </button>
+                )}
               </div>
             )}
           </div>

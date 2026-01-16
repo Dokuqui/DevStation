@@ -69,6 +69,8 @@ declare global {
 
       getAllWorkflows: () => Promise<Workflow[]>
 
+      onSnippetUpdate: (callback: (data: { id: string; content: string }) => void) => () => void
+
       onShowToast: (
         callback: (message: string, type: 'success' | 'error' | 'info') => void
       ) => () => void

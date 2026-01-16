@@ -14,7 +14,7 @@ interface SnippetState {
   activeSnippetId: string | null
   searchQuery: string
 
-  addSnippet: (type: 'code' | 'note', folderId?: string | null) => void
+  addSnippet: (snippetOrType: Snippet | 'code' | 'note', folderId?: string | null) => void
   updateSnippet: (id: string, data: Partial<Snippet>) => void
   deleteSnippet: (id: string) => void
   setActiveSnippet: (id: string | null) => void
@@ -36,27 +36,30 @@ export const useSnippetStore = create<SnippetState>()(
       activeSnippetId: null,
       searchQuery: '',
 
-      addSnippet: (type, folderId = null) => {
-        const newSnippet: Snippet = {
-          id: crypto.randomUUID(),
-          title: type === 'note' ? 'Untitled Note' : 'Untitled Snippet',
-          content: '',
-          type,
-          language: type === 'note' ? 'markdown' : 'javascript',
-          tags: [],
-          folderId,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          favorite: false
-        }
-        set((state) => ({
-          snippets: [newSnippet, ...state.snippets],
-          activeSnippetId: newSnippet.id,
-          folders: folderId
-            ? state.folders.map((f) => (f.id === folderId ? { ...f, isOpen: true } : f))
-            : state.folders
-        }))
-      },
+      addSnippet: (snippetOrType, folderId = null) =>
+        set((state) => {
+          let newSnippet: Snippet
+
+          if (typeof snippetOrType === 'object') {
+            newSnippet = snippetOrType
+          } else {
+            newSnippet = {
+              id: crypto.randomUUID(),
+              title: 'Untitled Snippet',
+              type: snippetOrType,
+              language: snippetOrType === 'code' ? 'javascript' : 'markdown',
+              content: '',
+              folderId: folderId,
+              tags: [],
+              favorite: false,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              linkedProjectIds: []
+            }
+          }
+
+          return { snippets: [newSnippet, ...state.snippets] }
+        }),
 
       updateSnippet: (id, data) =>
         set((state) => ({

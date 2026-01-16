@@ -97,6 +97,13 @@ const api = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getAllWorkflows: (): Promise<any> => ipcRenderer.invoke('workflow:get-all'),
 
+  onSnippetUpdate: (callback: (data: { id: string; content: string }) => void): (() => void) => {
+    const subscription = (_event, data): void => callback(data)
+    ipcRenderer.on('workflow:update-snippet', subscription)
+
+    return () => ipcRenderer.removeListener('workflow:update-snippet', subscription)
+  },
+
   onShowToast: (callback: (message: string, type: 'success' | 'error' | 'info') => void) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener = (_event: any, data: { message: string; type: any }): void =>
