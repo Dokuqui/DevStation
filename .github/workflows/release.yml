@@ -41,6 +41,7 @@ jobs:
           MAIN_VITE_GITHUB_CLIENT_ID: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_ID }}
           MAIN_VITE_GITHUB_CLIENT_SECRET: ${{ secrets.MAIN_VITE_GITHUB_CLIENT_SECRET }}
           MAIN_VITE_GITHUB_REDIRECT_URI: ${{ secrets.MAIN_VITE_GITHUB_REDIRECT_URI }}
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: npm run build
 
       - name: Package Electron App (Windows)
